@@ -1,14 +1,16 @@
-# rbaseball-comment-indexer
+# r-fantasybaseball-indexer
 
-A web app for fetching, storing, and searching comments from the Daily and Nightly "Anything Goes" threads on r/fantasybaseball.
+A web app for fetching, storing, and searching comments from the Daily and Nightly “Anything Goes” threads on [r/fantasybaseball](https://www.reddit.com/r/fantasybaseball/).
 
 ## Features
 
-- Full comment archive per thread (with Reddit score, flair, replies)
-- Fast keyword search
-- Real-time fetch from Reddit (no Pushshift)
-- Built with FastAPI + SQLAlchemy
+- Archives Reddit comment threads (with upvote scores, league flairs, and replies)
+- Supports keyword search across multiple days
+- Avoids duplicate fetches (tracks which threads are already stored)
+- Built with FastAPI, SQLAlchemy, and Pipenv
+- Designed to run self-hosted (Docker support planned)
 
-## Status
+## License
 
-In early development — schema and comment fetcher underway.
+This project is licensed under the [MIT License](LICENSE).
+
