@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
-Pipfile.lock
-*.sqlite3
+*.env
 *.db
+*.sqlite3
+Pipfile.lock
 *.code-workspace

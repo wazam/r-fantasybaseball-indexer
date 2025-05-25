@@ -1,9 +1,10 @@
-# app/db.py
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from app.models import Base
 
-DATABASE_URL = "sqlite:///./data.db"  # temporary file-based SQLite
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data.db")  # temporary file-based SQLite
 
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 

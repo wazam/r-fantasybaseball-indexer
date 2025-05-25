@@ -1,7 +1,9 @@
-# app/init.py
 from app.db import init_db
 
-# run with pipenv run python -m app.init
+# run with: pipenv run python -m app.init
 if __name__ == "__main__":
-    init_db()
-    print("Database initialized.")
+    try:
+        init_db()
+        print("[DONE] Database initialized successfully.")
+    except Exception as e:
+        print(f"[ERROR] Database initialization failed: {e}")
