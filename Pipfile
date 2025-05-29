@@ -10,6 +10,7 @@ fastapi = "*"
 uvicorn = "*"
 sqlalchemy = "*"
 python-dotenv = "*"
+apscheduler = "*"
 
 [dev-packages]
 

@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, UTC
 
-from app.config import get_reddit_client, get_cutoff_hours, get_cutoff_date
+from app.config import get_reddit_client, get_active_hours, get_cutoff_date
 
 reddit = get_reddit_client()
 
@@ -11,7 +11,7 @@ def is_valid_thread(title: str):
     return is_ag and is_freq
 
 def is_active_thread(posted_at: datetime) -> bool:
-    cutoff_hours = get_cutoff_hours()
+    cutoff_hours = get_active_hours()
     return datetime.now(UTC) - posted_at < timedelta(hours=cutoff_hours)
 
 def get_thread_urls(only_active=True):
@@ -42,8 +42,9 @@ def get_thread_urls(only_active=True):
 
 # Run with: pipenv run python -m app.threads.search
 if __name__ == "__main__":
-    print("[SEARCH] Fetching recent 'Anything Goes' thread URLs...\n")
+    print("[SEARCH] Fetching recent 'Anything Goes' thread URLs.")
     urls = get_thread_urls()
+    print(f"[INFO] Found {len(urls)} active thread URL(s).\n")
     for url in urls:
-        print(url)
-    print(f"\n[DONE] Found {len(urls)} valid active thread URL(s).")
+        print(f"[INFO] Found active thread: {url}")
+    print("\n[DONE] Thread search completed successfully.")
