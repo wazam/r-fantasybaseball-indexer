@@ -1,14 +1,13 @@
 # Anything Goes Archive
 
-![Anything Goes Archive](docs/icon.png)
-
 [![Docker](https://github.com/wazam/r-fantasybaseball-indexer/actions/workflows/docker.yml/badge.svg)](https://github.com/wazam/r-fantasybaseball-indexer/actions/workflows/docker.yml)
 [![Test Docker Compose Stack](https://github.com/wazam/r-fantasybaseball-indexer/actions/workflows/compose-test.yml/badge.svg)](https://github.com/wazam/r-fantasybaseball-indexer/actions/workflows/compose-test.yml)
 [![Lint](https://github.com/wazam/r-fantasybaseball-indexer/actions/workflows/lint.yml/badge.svg)](https://github.com/wazam/r-fantasybaseball-indexer/actions/workflows/lint.yml)
 [![Latest Release](https://img.shields.io/github/v/release/wazam/r-fantasybaseball-indexer?sort=semver)](https://github.com/wazam/r-fantasybaseball-indexer/releases)
 [![Docker Image Size](https://img.shields.io/docker/image-size/ghcr.io/wazam/r-fantasybaseball-indexer/latest?label=image&logo=docker)](https://github.com/wazam/r-fantasybaseball-indexer/pkgs/container/r-fantasybaseball-indexer)
+[![Docker Hub](https://img.shields.io/docker/pulls/wazam123/r-fantasybaseball-indexer?logo=docker&label=Docker%20Hub)](https://hub.docker.com/repository/docker/wazam123/r-fantasybaseball-indexer/general)
 
-Anything Goes Archive is a self-hosted tool that automatically archives every Daily and Nightly "Anything Goes" thread from [r/fantasybaseball](https://www.reddit.com/r/fantasybaseball/). Tens of thousands of comments are stored locally with upvote scores, league flairs, and full reply structure. Search across all threads at once to track player discussions over time, compare sentiment across multiple days side by side, and find exactly what you need without fighting Reddit's search.
+![Anything Goes Archive](docs/icon.png) **Anything Goes Archive** is a self-hosted tool that automatically archives every Daily and Nightly "Anything Goes" thread from [r/fantasybaseball](https://www.reddit.com/r/fantasybaseball/). Tens of thousands of comments are stored locally with upvote scores, league flairs, and full reply structure. Search across all threads at once to track player discussions over time, compare sentiment across multiple days side by side, and find exactly what you need without fighting Reddit's search.
 
 ## Table of Contents
 
@@ -59,7 +58,7 @@ All install methods require a Reddit API app. Create one at [reddit.com/prefs/ap
 
 ### Run via Docker
 
-The image is published to [GitHub Container Registry](https://github.com/wazam/r-fantasybaseball-indexer/pkgs/container/r-fantasybaseball-indexer) and [Docker Hub](https://hub.docker.com/r/wazam123/r-fantasybaseball-indexer).
+The image is published to [GitHub Container Registry](https://github.com/wazam/r-fantasybaseball-indexer/pkgs/container/r-fantasybaseball-indexer) (`ghcr.io/wazam/r-fantasybaseball-indexer`) and [Docker Hub](https://hub.docker.com/r/wazam123/r-fantasybaseball-indexer) (`wazam123/r-fantasybaseball-indexer`).
 
 1. **Create the data directory**
 
@@ -96,7 +95,9 @@ The image is published to [GitHub Container Registry](https://github.com/wazam/r
          - REDDIT_CLIENT_SECRET=    # Required - see Set Up Reddit API Access in README
          # - THREAD_TTL_HOURS=24
          # - SCHEDULER_INTERVAL_MINUTES=60
-       command: ["./.venv/bin/python", "-m", "app.scheduler"]
+         # - BACKFILL_DATE=auto         # Backfill from Feb 1 of current year on first startup
+         # - BACKFILL_DATE=2026-02-10   # Or specify a custom cutoff date
+       command: ["./.venv/bin/python", "-m", "app.startup"]
        restart: unless-stopped
    ```
 
@@ -172,7 +173,7 @@ For running without Docker using a local Python environment.
 
 5. **Backfill missing threads (optional)**
 
-   Imports threads missed while the scheduler was offline. Pass a `YYYY-MM-DD` cutoff date to set how far back to look. This may take a couple of hours for large date ranges.
+   Imports threads missed while the scheduler was offline. Pass a `YYYY-MM-DD` cutoff date to set how far back to look. This may take a couple of hours for large date ranges. Omit the date to default to 7 days back.
 
    ```sh
    pipenv run python -m app.threads.backfill 2026-02-10
@@ -190,7 +191,10 @@ For running without Docker using a local Python environment.
    pipenv run uvicorn app.main:app --reload --host 0.0.0.0 --port 9009
    ```
 
-   Then open [http://localhost:9009](http://localhost:9009) in your browser. The `--host 0.0.0.0` flag is required to reach the UI from other devices on your local network. Omit it for localhost-only access.
+   Then open [http://localhost:9009](http://localhost:9009) in your browser.
+
+   > [!TIP]
+   > The `--host 0.0.0.0` flag is required to reach the UI from other devices on your local network. Omit it for localhost-only access.
 
 ---
 

@@ -36,7 +36,7 @@ jobs:
           docker compose up -d web
 
       - name: Wait for web service
-        run: sleep 15
+        run: sleep 30
 
       - name: Verify web UI is responding
         run: curl --retry 10 --retry-connrefused --fail http://localhost:9009/

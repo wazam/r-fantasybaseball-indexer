@@ -43,6 +43,7 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern=latest
+            type=raw,value=main
 
       - name: Build and push
         id: build-and-push
@@ -59,6 +60,9 @@ jobs:
             IMAGE_VERSION=${{ steps.meta.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
 
       - name: Sign image
         run: |
@@ -90,6 +94,7 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern=latest
+            type=raw,value=main
 
       - name: Build and push
         uses: docker/build-push-action@v7
