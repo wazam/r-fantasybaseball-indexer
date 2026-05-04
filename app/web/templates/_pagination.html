@@ -1,0 +1,58 @@
+{% macro render(pag, base_url, q=None, days_back=0, sort_by="new") %}
+{% set params = "&per_page=" ~ pag.per_page ~ "&days_back=" ~ days_back ~ "&sort_by=" ~ sort_by ~ ("&q=" ~ q if q else "") %}
+<div class="pagination-bar">
+
+  <form class="sort-form pag-left" method="get" action="{{ base_url }}">
+    <input type="hidden" name="page" value="1">
+    <input type="hidden" name="per_page" value="{{ pag.per_page }}">
+    <input type="hidden" name="days_back" value="{{ days_back }}">
+    {% if q is not none %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+    <label class="filter-label">Sort</label>
+    <select name="sort_by" title="Sort order" onchange="this.form.submit()">
+      <option value="old" {% if sort_by == "old" %}selected{% endif %}>Old</option>
+      <option value="new" {% if sort_by == "new" %}selected{% endif %}>New</option>
+      <option value="top" {% if sort_by == "top" %}selected{% endif %}>Top</option>
+      <option value="qa"  {% if sort_by == "qa"  %}selected{% endif %}>Q&amp;A</option>
+    </select>
+    <noscript><button type="submit">Apply</button></noscript>
+  </form>
+
+  <div class="page-controls">
+    {% if pag.has_prev %}
+      <a class="page-nav" href="{{ base_url }}?page=1{{ params }}" title="First">&laquo;</a>
+      <a class="page-nav" href="{{ base_url }}?page={{ pag.page - 1 }}{{ params }}" title="Previous">&lsaquo;</a>
+    {% else %}
+      <span class="page-nav disabled">&laquo;</span>
+      <span class="page-nav disabled">&lsaquo;</span>
+    {% endif %}
+
+    <span class="page-current">{{ "{:,}".format(pag.page) }}</span>
+
+    {% if pag.has_next %}
+      <a class="page-nav" href="{{ base_url }}?page={{ pag.page + 1 }}{{ params }}" title="Next">&rsaquo;</a>
+      <a class="page-nav" href="{{ base_url }}?page={{ pag.total_pages }}{{ params }}" title="Last">&raquo;</a>
+    {% else %}
+      <span class="page-nav disabled">&rsaquo;</span>
+      <span class="page-nav disabled">&raquo;</span>
+    {% endif %}
+  </div>
+
+  <form class="days-back-form pag-right" method="get" action="{{ base_url }}">
+    <input type="hidden" name="page" value="1">
+    <input type="hidden" name="per_page" value="{{ pag.per_page }}">
+    <input type="hidden" name="sort_by" value="{{ sort_by }}">
+    {% if q is not none %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+    <label class="filter-label">Ago</label>
+    <select name="days_back" title="Days back filter" onchange="this.form.submit()">
+      <option value="1"  {% if days_back == 1  %}selected{% endif %}>1d</option>
+      <option value="7"  {% if days_back == 7  %}selected{% endif %}>7d</option>
+      <option value="14" {% if days_back == 14 %}selected{% endif %}>14d</option>
+      <option value="30" {% if days_back == 30 %}selected{% endif %}>30d</option>
+      <option value="60" {% if days_back == 60 %}selected{% endif %}>60d</option>
+      <option value="0"  {% if days_back == 0  %}selected{% endif %}>All</option>
+    </select>
+    <noscript><button type="submit">Apply</button></noscript>
+  </form>
+
+</div>
+{% endmacro %}

@@ -1,0 +1,21 @@
+{
+  "name": "Anything Goes Archive",
+  "short_name": "Anything Goes",
+  "description": "Browse and search archived r/fantasybaseball Anything Goes threads.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f7f8",
+  "theme_color": "#ff4500",
+  "icons": [
+    {
+      "src": "/static/icon.png",
+      "sizes": "658x658",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icon.png",
+      "sizes": "any",
+      "type": "image/png"
+    }
+  ]
+}

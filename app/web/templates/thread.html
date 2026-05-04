@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% from "_pagination.html" import render as pagination %}
+{% block title %}{{ thread.title }} • Anything Goes Archive{% endblock %}
+{% block content %}
+  <div class="thread-header">
+    <h1 class="thread-title">{{ thread.title }}</h1>
+    <div class="thread-meta">
+      <span>{{ thread.posted_at | localdt('%b %-d, %Y') }}</span>
+      <span>{{ "{:,}".format(thread.comment_count) }} comments</span>
+      <span>{{ thread.score }} pts</span>
+      <a href="{{ thread.permalink }}" target="_blank" rel="noopener">View on Reddit</a>
+    </div>
+  </div>
+  {{ pagination(pag, "/threads/" ~ thread.id, days_back=days_back, sort_by=sort_by) }}
+  <div class="comment-tree">
+    {% for item in comment_tree %}
+      {% set depth = [item.depth, 4] | min %}
+      {% set c = item.comment %}
+      <div class="comment depth-{{ depth }}" data-depth="{{ item.depth }}">
+        <div class="comment-meta">
+          <button class="collapse-btn" aria-label="Collapse">[&minus;]</button>
+          <span class="comment-author">{{ c.author }}</span>
+          {% if c.flair %}<span class="comment-flair">{{ c.flair }}</span>{% endif %}
+          <span class="comment-score">{{ c.score }}</span>
+          <a class="comment-time" href="{{ c.permalink }}" target="_blank" rel="noopener" data-utc="{{ c.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ c.created_utc | localdt('%b %-d, %-I:%M %p') }}</a>
+        </div>
+        <div class="comment-body">{{ c.body }}</div>
+      </div>
+    {% endfor %}
+  </div>
+  {{ pagination(pag, "/threads/" ~ thread.id, days_back=days_back, sort_by=sort_by) }}
+  <script>
+    document.querySelectorAll('.collapse-btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var comment = btn.closest('.comment');
+        var depth = parseInt(comment.dataset.depth);
+        var collapsed = btn.dataset.collapsed === 'true';
+        var sibling = comment.nextElementSibling;
+        while (sibling && sibling.classList.contains('comment')) {
+          if (parseInt(sibling.dataset.depth) <= depth) break;
+          sibling.style.display = collapsed ? '' : 'none';
+          sibling = sibling.nextElementSibling;
+        }
+        comment.querySelector('.comment-body').style.display = collapsed ? '' : 'none';
+        btn.dataset.collapsed = collapsed ? 'false' : 'true';
+        btn.innerHTML = collapsed ? '[&minus;]' : '[+]';
+      });
+    });
+  </script>
+{% endblock %}

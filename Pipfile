@@ -5,14 +5,16 @@ name = "pypi"
 
 [packages]
 praw = "*"
-psycopg2-binary = "*"
 fastapi = "*"
 uvicorn = "*"
 sqlalchemy = "*"
 python-dotenv = "*"
 apscheduler = "*"
+jinja2 = "*"
+python-multipart = "*"
 
 [dev-packages]
+flake8 = "*"
 
 [requires]
-python_version = "3.13"
+python_version = "3.13.13"

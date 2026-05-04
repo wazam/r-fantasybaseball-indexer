@@ -1,0 +1,103 @@
+{% extends "layout.html" %}
+{% block title %}Settings • Anything Goes Archive{% endblock %}
+{% block content %}
+  <h1 class="page-heading">Settings</h1>
+
+  <div class="settings-section">
+    <h2 class="settings-heading">Browser Preferences</h2>
+    <p class="settings-note">Saved to this browser only.</p>
+
+    <div class="settings-pref">
+      <div class="pref-info">
+        <span class="pref-label">Text Size</span>
+        <span class="pref-note">Scales all text and spacing across the app.</span>
+      </div>
+      <div class="segment-control">
+        <button class="segment-btn" data-size="small" onclick="setTextSize('small')">Small</button>
+        <button class="segment-btn" data-size="standard" onclick="setTextSize('standard')">Standard</button>
+        <button class="segment-btn" data-size="large" onclick="setTextSize('large')">Large</button>
+      </div>
+    </div>
+
+    <div class="settings-pref">
+      <div class="pref-info">
+        <span class="pref-label">Night Mode</span>
+        <span class="pref-note">Switches to a dark color scheme, easier on the eyes in low light.</span>
+      </div>
+      <label class="toggle-switch" aria-label="Toggle Night Mode">
+        <input type="checkbox" id="night-mode-toggle" onchange="toggleNightMode()">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div class="settings-pref">
+      <div class="pref-info">
+        <span class="pref-label">Relative Dates</span>
+        <span class="pref-note">Shows dates as "3h ago" or "2d ago" for content less than a week old.</span>
+      </div>
+      <label class="toggle-switch" aria-label="Toggle Relative Dates">
+        <input type="checkbox" id="rel-ts-toggle" onchange="toggleRelativeTimestamps()">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div class="settings-pref">
+      <div class="pref-info">
+        <span class="pref-label">Full Width</span>
+        <span class="pref-note">Expands content to fill the full screen width on large displays.</span>
+      </div>
+      <label class="toggle-switch" aria-label="Toggle Full Width">
+        <input type="checkbox" id="wider-width-toggle" onchange="toggleWiderWidth()">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div class="settings-pref">
+      <div class="pref-info">
+        <span class="pref-label">Rows per Page</span>
+        <span class="pref-note">Number of comments or threads loaded per page.</span>
+      </div>
+      <select id="per-page-setting" class="pref-select" onchange="savePerPageSetting(this.value)">
+        <option value="20">20</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+        <option value="250">250</option>
+        <option value="500">500</option>
+        <option value="0">All</option>
+      </select>
+    </div>
+
+    <div class="settings-pref">
+      <div class="pref-info">
+        <span class="pref-label">Auto-collapse Threshold</span>
+        <span class="pref-note">Collapses comments scoring at or below this value when browsing thread pages. Leave empty to disable.</span>
+      </div>
+      <input type="number" id="collapse-threshold" class="pref-input" max="0" onblur="saveCollapseThreshold()">
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <h2 class="settings-heading">About</h2>
+    <p class="settings-note"><a href="https://github.com/wazam/r-fantasybaseball-indexer" target="_blank" rel="noopener">View on GitHub</a></p>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      syncNightModeToggle();
+
+      var relToggle = document.getElementById('rel-ts-toggle');
+      if (relToggle) relToggle.checked = localStorage.getItem('aga_relative_timestamps') !== 'false';
+
+      var threshInput = document.getElementById('collapse-threshold');
+      if (threshInput) {
+        var saved = localStorage.getItem('aga_auto_collapse');
+        threshInput.value = saved !== null ? saved : '-1';
+      }
+
+      var perPageSelect = document.getElementById('per-page-setting');
+      if (perPageSelect) {
+        perPageSelect.value = localStorage.getItem('aga_per_page') || '100';
+      }
+    });
+  </script>
+{% endblock %}

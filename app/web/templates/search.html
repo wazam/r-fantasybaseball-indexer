@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+{% from "_pagination.html" import render as pagination %}
+{% block title %}{% if q %}Search "{{ q }}"{% else %}All Comments{% endif %} • Anything Goes Archive{% endblock %}
+{% block content %}
+  <h1 class="page-heading">
+    {% if q %}Search: <em>{{ q }}</em>{% else %}All Comments{% endif %}
+  </h1>
+  {{ pagination(pag, "/search", q=q, days_back=days_back, sort_by=sort_by) }}
+  <p class="result-count">{{ "{:,}".format(pag.total) }} result{% if pag.total != 1 %}s{% endif %}</p>
+  {% if results %}
+    <ul class="search-results">
+      {% for item in results %}
+      <li class="search-result-item" id="sr-{{ item.comment.id }}">
+        <div class="search-result-meta">
+          <button class="collapse-btn" aria-label="Collapse">[&minus;]</button>
+          <span class="comment-author">{{ item.comment.author }}</span>
+          {% if item.comment.flair %}<span class="comment-flair">{{ item.comment.flair }}</span>{% endif %}
+          <span class="comment-score">{{ item.comment.score }}</span>
+          <a class="comment-time" href="{{ item.comment.permalink }}" target="_blank" rel="noopener" data-utc="{{ item.comment.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ item.comment.created_utc | localdt('%b %-d, %Y %-I:%M %p') }}</a>
+          <button class="context-btn" onclick="toggleContext('{{ item.comment.id }}', this)">Context</button>
+        </div>
+        <div class="comment-body">{{ item.comment.body }}</div>
+        <div class="context-container" id="ctx-{{ item.comment.id }}" style="display:none"></div>
+      </li>
+      {% endfor %}
+    </ul>
+    {{ pagination(pag, "/search", q=q, days_back=days_back, sort_by=sort_by) }}
+  {% else %}
+    <p class="no-results">{% if q %}No comments found for "{{ q }}".{% else %}No comments in the archive yet.{% endif %}</p>
+  {% endif %}
+  <script>
+    document.querySelectorAll('.search-result-item .collapse-btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var item = btn.closest('.search-result-item');
+        var body = item.querySelector('.comment-body');
+        var ctx = item.querySelector('.context-container');
+        var collapsed = btn.dataset.collapsed === 'true';
+        body.style.display = collapsed ? '' : 'none';
+        if (ctx) ctx.style.display = collapsed ? '' : 'none';
+        btn.dataset.collapsed = collapsed ? 'false' : 'true';
+        btn.innerHTML = collapsed ? '[&minus;]' : '[+]';
+      });
+    });
+
+    function toggleContext(commentId, btn) {
+      var container = document.getElementById('ctx-' + commentId);
+      if (container.style.display !== 'none') {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        btn.textContent = 'Context';
+        return;
+      }
+      btn.textContent = 'Loading…';
+      fetch('/comment/' + commentId + '/context')
+        .then(function(r) { return r.text(); })
+        .then(function(html) {
+          container.innerHTML = html;
+          container.style.display = '';
+          btn.textContent = 'Hide Context';
+        })
+        .catch(function() { btn.textContent = 'Context'; });
+    }
+  </script>
+{% endblock %}

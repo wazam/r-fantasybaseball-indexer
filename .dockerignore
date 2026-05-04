@@ -1,0 +1,16 @@
+.env
+data/
+*.sqlite3
+archive/
+__pycache__/
+*.pyc
+.git/
+.github/
+docs/
+TODO.md
+ROADMAP.md
+compose.yaml
+compose.override.yaml
+.dockerignore
+r-fantasybaseball-indexer.code-workspace
+.flake8

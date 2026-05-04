@@ -65,11 +65,11 @@ def fetch_new_threads():
 
 # Run with: pipenv run python -m app.threads.fetch_active
 if __name__ == "__main__":
-    print("[FETCH_ACTIVE] Checking for outdated threads.")
-    deactivate_old_threads()
-
     # print("[FETCH_ACTIVE] Manually overriding all threads as active.")
     # activate_all_threads()
+
+    print("[FETCH_ACTIVE] Checking for outdated threads.")
+    deactivate_old_threads()
 
     print("[FETCH_ACTIVE] Fetching updates for threads.")
     fetch_active_threads()

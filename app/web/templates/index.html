@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% from "_pagination.html" import render as pagination %}
+{% block title %}Threads • Anything Goes Archive{% endblock %}
+{% block content %}
+  <h1 class="page-heading">All Threads</h1>
+  <ul class="thread-list">
+    {% for thread in threads %}
+    <li class="thread-item">
+      <a class="thread-title" href="/threads/{{ thread.id }}">{{ thread.title }}</a>
+      <div class="thread-meta">
+        <span class="thread-date" data-utc="{{ thread.posted_at.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ thread.posted_at | localdt('%b %-d, %Y') }}</span>
+        <span class="thread-comments">{{ "{:,}".format(thread.comment_count) }} comments</span>
+        <span class="thread-score">{{ thread.score }} pts</span>
+        <a class="thread-reddit-link" href="{{ thread.permalink }}" target="_blank" rel="noopener">reddit</a>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {{ pagination(pag, "/", days_back=days_back, sort_by=sort_by) }}
+{% endblock %}

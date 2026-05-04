@@ -1,0 +1,26 @@
+services:
+  web:
+    image: ghcr.io/wazam/r-fantasybaseball-indexer:latest
+    container_name: anything-goes-web
+    ports:
+      - "9009:9009"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - TZ=UTC
+    restart: unless-stopped
+
+  scheduler:
+    image: ghcr.io/wazam/r-fantasybaseball-indexer:latest
+    container_name: anything-goes-scheduler
+    volumes:
+      - ./data:/app/data
+    environment:
+      - REDDIT_CLIENT_ID=       # Required - see Set Up Reddit API Access in README
+      - REDDIT_CLIENT_SECRET=   # Required - see Set Up Reddit API Access in README
+      # - THREAD_TTL_HOURS=24
+      # - SCHEDULER_INTERVAL_MINUTES=60
+      # - BACKFILL_DATE=auto        # Backfill from Feb 1 of current year on first startup
+      # - BACKFILL_DATE=2026-02-10  # Or specify a custom cutoff date
+    command: ["./.venv/bin/python", "-m", "app.startup"]
+    restart: unless-stopped

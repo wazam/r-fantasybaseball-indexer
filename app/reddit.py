@@ -73,7 +73,7 @@ def fetch_and_store_thread(submission_url: str):
                 session.commit()
                 thread = existing_thread
             else:
-                print("[INFO] Skipping update for inacative thread.")
+                print("[INFO] Skipping update for inactive thread.")
                 return
 
         replies_map = {}
@@ -138,7 +138,7 @@ def fetch_and_store_thread(submission_url: str):
 if __name__ == "__main__":
     print("[REDDIT] Standalone thread fetcher using hardcoded URL.")
 
-    valid_url = "https://www.reddit.com/r/fantasybaseball/comments/1ksagtd/nightly_anything_goes_thread_21_may_2025/"
+    valid_url = "https://www.reddit.com/r/fantasybaseball/comments/1s6t89c/daily_anything_goes_thread_march_29_2026/"
     print(f"[INFO] Target URL: {valid_url}")
 
     try:

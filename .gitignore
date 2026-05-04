@@ -1,7 +1,8 @@
 __pycache__/
+archive/
+data/
 *.pyc
-*.env
-*.db
-*.sqlite3
-Pipfile.lock
-*.code-workspace
+.env
+compose.override.yaml
+r-fantasybaseball-indexer.code-workspace
+TODO.md

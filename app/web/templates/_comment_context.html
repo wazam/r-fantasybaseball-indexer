@@ -1,0 +1,37 @@
+<div class="context-tree">
+  {% for i in range(ancestors|length) %}
+  {% set a = ancestors[i] %}
+  <div class="context-comment depth-{{ i }}">
+    <div class="comment-meta">
+      <span class="comment-author">{{ a.author }}</span>
+      {% if a.flair %}<span class="comment-flair">{{ a.flair }}</span>{% endif %}
+      <span class="comment-score">{{ a.score }}</span>
+      <a class="comment-time" href="{{ a.permalink }}" target="_blank" rel="noopener" data-utc="{{ a.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ a.created_utc | localdt('%b %-d, %-I:%M %p') }}</a>
+    </div>
+    <div class="comment-body">{{ a.body }}</div>
+  </div>
+  {% endfor %}
+
+  <div class="context-comment context-match depth-{{ ancestors|length }}">
+    <div class="comment-meta">
+      <span class="context-match-label">matched</span>
+      <span class="comment-author">{{ comment.author }}</span>
+      {% if comment.flair %}<span class="comment-flair">{{ comment.flair }}</span>{% endif %}
+      <span class="comment-score">{{ comment.score }}</span>
+      <a class="comment-time" href="{{ comment.permalink }}" target="_blank" rel="noopener" data-utc="{{ comment.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ comment.created_utc | localdt('%b %-d, %-I:%M %p') }}</a>
+    </div>
+    <div class="comment-body">{{ comment.body }}</div>
+  </div>
+
+  {% for c in children %}
+  <div class="context-comment depth-{{ ancestors|length + 1 }}">
+    <div class="comment-meta">
+      <span class="comment-author">{{ c.author }}</span>
+      {% if c.flair %}<span class="comment-flair">{{ c.flair }}</span>{% endif %}
+      <span class="comment-score">{{ c.score }}</span>
+      <a class="comment-time" href="{{ c.permalink }}" target="_blank" rel="noopener" data-utc="{{ c.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ c.created_utc | localdt('%b %-d, %-I:%M %p') }}</a>
+    </div>
+    <div class="comment-body">{{ c.body }}</div>
+  </div>
+  {% endfor %}
+</div>
