@@ -41,6 +41,10 @@ jobs:
       - name: Verify web UI is responding
         run: curl --retry 10 --retry-connrefused --fail http://localhost:9009/
 
+      - name: Dump container logs on failure
+        if: failure()
+        run: docker compose logs
+
       - name: Teardown
         if: always()
         run: docker compose down --volumes --remove-orphans
