@@ -27,7 +27,7 @@ jobs:
         run: docker build --load -t ghcr.io/wazam/r-fantasybaseball-indexer:latest .
 
       - name: Create data directory
-        run: mkdir -p data
+        run: mkdir -p data && chmod 777 data
 
       - name: Start web service
         run: |
