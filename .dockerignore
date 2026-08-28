@@ -3,7 +3,7 @@
 archive/
 data/
 docs/
-__pycache__/
+**/__pycache__
 *.pyc
 .dockerignore
 .env

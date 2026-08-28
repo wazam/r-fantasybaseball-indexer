@@ -1,6 +1,6 @@
-__pycache__/
 archive/
 data/
+__pycache__/
 *.pyc
 .env
 compose.override.yaml
