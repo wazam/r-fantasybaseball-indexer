@@ -1,10 +1,13 @@
 from datetime import datetime, timedelta, UTC
 from prawcore.exceptions import TooManyRequests
+import logging
 import time
 
 from app.config import get_reddit_client, get_active_hours
 from app.db import SessionLocal
 from app.models import Thread, Comment
+
+logger = logging.getLogger(__name__)
 
 reddit = get_reddit_client()
 
@@ -23,15 +26,15 @@ def fetch_and_store_thread(submission_url: str):
                 break  # success
             except TooManyRequests as e:
                 if attempt < retries:
-                    print(f"[ERROR] 429 TooManyRequests — retrying in {delay}s (attempt {attempt}/{retries})...")
+                    logger.warning(f"429 TooManyRequests — retrying in {delay}s (attempt {attempt}/{retries})...")
                     time.sleep(delay)
                 else:
-                    print(f"[ERROR] Thread failed after {retries} retries: {submission_url}")
+                    logger.error(f"Thread failed after {retries} retries: {submission_url}")
                     session.rollback()
                     session.close()
                     return
             except Exception as e:
-                print(f"[ERROR] Couldn't fetch thread: {e}")
+                logger.error(f"Couldn't fetch thread: {e}")
                 session.rollback()
                 session.close()
                 return
@@ -39,10 +42,10 @@ def fetch_and_store_thread(submission_url: str):
         reddit_id = submission.id
         existing_thread = session.query(Thread).filter_by(reddit_id=reddit_id).first()
         if existing_thread and not existing_thread.is_active:
-            print(f"[INFO] Skipping already archived thread: {existing_thread.title}")
+            logger.info(f"Skipping already archived thread: {existing_thread.title}")
             return
 
-        print(f"[INFO] Storing thread: {submission.title}")
+        logger.info(f"Storing thread: {submission.title}")
 
         def is_active_thread(posted_at: datetime) -> bool:
             hours = get_active_hours()
@@ -73,7 +76,7 @@ def fetch_and_store_thread(submission_url: str):
                 session.commit()
                 thread = existing_thread
             else:
-                print("[INFO] Skipping update for inactive thread.")
+                logger.info("Skipping update for inactive thread.")
                 return
 
         replies_map = {}
@@ -125,24 +128,25 @@ def fetch_and_store_thread(submission_url: str):
             session.add(comment)
 
         session.commit()
-        print(f"[INFO] Stored {len(all_comments)} comments.")
+        logger.info(f"Stored {len(all_comments)} comments.")
 
     except Exception as e:
         session.rollback()
-        print(f"[ERROR] Could not store thread: {e}")
+        logger.error(f"Could not store thread: {e}")
 
     finally:
         session.close()
 
 # Run with: pipenv run python -m app.reddit
 if __name__ == "__main__":
-    print("[REDDIT] Standalone thread fetcher using hardcoded URL.")
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-8s %(name)s %(message)s")
+    logger.info("Standalone thread fetcher using hardcoded URL.")
 
     valid_url = "https://www.reddit.com/r/fantasybaseball/comments/1s6t89c/daily_anything_goes_thread_march_29_2026/"
-    print(f"[INFO] Target URL: {valid_url}")
+    logger.info(f"Target URL: {valid_url}")
 
     try:
         fetch_and_store_thread(valid_url)
-        print("[INFO] Thread fetch completed successfully.")
+        logger.info("Thread fetch completed successfully.")
     except Exception as e:
-        print(f"[ERROR] Unhandled exception during fetch: {e}")
+        logger.error(f"Unhandled exception during fetch: {e}")

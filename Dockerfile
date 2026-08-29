@@ -56,4 +56,4 @@ RUN mkdir -p /app/data && chown -R ${USERNAME}:${USERNAME} /app && \
 EXPOSE 9009/tcp
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["./.venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "9009"]
+CMD ["./.venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "9009", "--log-config", "app/logging_config.json"]

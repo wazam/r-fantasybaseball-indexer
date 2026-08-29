@@ -1,10 +1,13 @@
 from datetime import datetime, timedelta, UTC
+import logging
 
 from app.config import get_active_hours
 from app.db import SessionLocal
 from app.models import Thread
 from app.reddit import fetch_and_store_thread
 from app.threads.search import get_thread_urls
+
+logger = logging.getLogger(__name__)
 
 def deactivate_old_threads():
     cutoff = datetime.now(UTC) - timedelta(hours=get_active_hours())
@@ -19,7 +22,7 @@ def deactivate_old_threads():
         })
         session.commit()
 
-    print(f"[INFO] Marked {updated} thread(s) as inactive.")
+    logger.info(f"Marked {updated} thread(s) as inactive.")
 
 def activate_all_threads():
     with SessionLocal() as session:
@@ -29,23 +32,23 @@ def activate_all_threads():
         })
         session.commit()
 
-    print(f"[INFO] Marked {updated} thread(s) as active.")
+    logger.info(f"Marked {updated} thread(s) as active.")
 
 def fetch_active_threads():
     with SessionLocal() as session:
         active_threads = session.query(Thread).filter(Thread.is_active == True).all()
 
     if not active_threads:
-        print("[INFO] No active threads to update.")
+        logger.info("No active threads to update.")
         return
 
-    print(f"[INFO] Found {len(active_threads)} active thread(s) to update.")
+    logger.info(f"Found {len(active_threads)} active thread(s) to update.")
 
     for i, thread in enumerate(active_threads, 1):
-        print(f"[INFO] Fetching thread {i}/{len(active_threads)}: {thread.permalink}")
+        logger.info(f"Fetching thread {i}/{len(active_threads)}: {thread.permalink}")
         fetch_and_store_thread(thread.permalink)
 
-    print(f"[INFO] Updated {len(active_threads)} active thread(s).")
+    logger.info(f"Updated {len(active_threads)} active thread(s).")
 
 def fetch_new_threads():
     recent_urls = get_thread_urls()
@@ -55,25 +58,27 @@ def fetch_new_threads():
         for url in recent_urls:
             exists = session.query(Thread).filter_by(permalink=url).first()
             if exists:
-                continue  # Skip silently to reduce CLI spam
+                continue  # Skip silently to reduce log spam
 
-            print(f"[INFO] Fetching newly posted thread: {url}")
+            logger.info(f"Fetching newly posted thread: {url}")
             fetch_and_store_thread(url)
             added += 1
 
-    print(f"[INFO] Fetched {added} new thread(s).")
+    logger.info(f"Fetched {added} new thread(s).")
 
 # Run with: pipenv run python -m app.threads.fetch_active
 if __name__ == "__main__":
-    # print("[FETCH_ACTIVE] Manually overriding all threads as active.")
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-8s %(name)s %(message)s")
+
+    # logger.info("Manually overriding all threads as active.")
     # activate_all_threads()
 
-    print("[FETCH_ACTIVE] Checking for outdated threads.")
+    logger.info("Checking for outdated threads.")
     deactivate_old_threads()
 
-    print("[FETCH_ACTIVE] Fetching updates for threads.")
+    logger.info("Fetching updates for threads.")
     fetch_active_threads()
 
-    print("[FETCH_ACTIVE] Checking for new threads.")
+    logger.info("Checking for new threads.")
     fetch_new_threads()
-    print("[DONE] Threads fetched and updated successfully.")
+    logger.info("Threads fetched and updated successfully.")
