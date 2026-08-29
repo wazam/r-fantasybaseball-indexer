@@ -8,7 +8,7 @@
   {{ pagination(pag, "/search", q=q, days_back=days_back, sort_by=sort_by) }}
   <p class="result-count">{{ "{:,}".format(pag.total) }} result{% if pag.total != 1 %}s{% endif %}</p>
   {% if results %}
-    <ul class="search-results">
+    <ul class="search-results" data-query="{{ q }}">
       {% for item in results %}
       <li class="search-result-item" id="sr-{{ item.comment.id }}">
         <div class="search-result-meta">
@@ -19,7 +19,7 @@
           <a class="comment-time" href="{{ item.comment.permalink }}" target="_blank" rel="noopener" data-utc="{{ item.comment.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ item.comment.created_utc | localdt('%b %-d, %Y %-I:%M %p') }}</a>
           <button class="context-btn" onclick="toggleContext('{{ item.comment.id }}', this)">Context</button>
         </div>
-        <div class="comment-body">{{ item.comment.body | render_markdown }}</div>
+        <div class="comment-body">{{ item.comment.body | render_markdown | highlight(highlight_terms) }}</div>
         <div class="context-container" id="ctx-{{ item.comment.id }}" style="display:none"></div>
       </li>
       {% endfor %}
@@ -52,7 +52,8 @@
         return;
       }
       btn.textContent = 'Loading…';
-      fetch('/comment/' + commentId + '/context')
+      var query = document.querySelector('.search-results') ? document.querySelector('.search-results').dataset.query : '';
+      fetch('/comment/' + commentId + '/context' + (query ? '?q=' + encodeURIComponent(query) : ''))
         .then(function(r) { return r.text(); })
         .then(function(html) {
           container.innerHTML = html;

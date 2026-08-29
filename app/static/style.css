@@ -258,6 +258,8 @@ html.dark a.comment-time { color: #4fbdff; }
 
 .comment-body th { background: #f6f7f8; font-weight: 600; }
 
+.comment-body mark { background: #ffe066; color: #1a1a1b; border-radius: 2px; padding: 0 0.1rem; }
+
 /* === SEARCH RESULTS === */
 .result-count { font-size: 0.85rem; color: #7c7c7c; margin-bottom: 0.75rem; }
 
@@ -717,6 +719,7 @@ html.dark .comment-author { color: #d7dadc; }
 html.dark .comment-body th,
 html.dark .comment-body td { border-color: #343536; }
 html.dark .comment-body th { background: #272729; }
+html.dark .comment-body mark { background: #a37b00; color: #fff; }
 html.dark .comment-flair { background: #343536; color: #d7dadc; }
 html.dark .filter-label,
 html.dark .comment-time,

@@ -10,7 +10,7 @@ from starlette.templating import Jinja2Templates
 
 from app.db import SessionLocal
 from app.models import Comment, Thread
-from app.web.markdown_render import render_markdown
+from app.web.markdown_render import highlight_terms, render_markdown
 from app.web.search_query import apply_search_filters, parse_search_query
 
 router = APIRouter()
@@ -27,6 +27,14 @@ def _localdt(dt, fmt="%b %-d, %-I:%M %p"):
 
 templates.env.filters["localdt"] = _localdt
 templates.env.filters["render_markdown"] = render_markdown
+templates.env.filters["highlight"] = highlight_terms
+
+
+def get_highlight_terms(q: str) -> list:
+    if not q:
+        return []
+    parsed = parse_search_query(q)
+    return parsed.or_terms + parsed.required_terms
 
 
 def get_db():
@@ -189,11 +197,11 @@ def search(request: Request, q: str = "", page: int = 1, per_page: int = 100, da
     if pag["per_page"] > 0:
         base_query = base_query.offset((pag["page"] - 1) * pag["per_page"]).limit(pag["per_page"])
     results = [{"comment": c, "thread": t} for c, t in base_query.all()]
-    return templates.TemplateResponse(request, "search.html", {"q": q, "results": results, "pag": pag, "days_back": days_back, "sort_by": sort_by})
+    return templates.TemplateResponse(request, "search.html", {"q": q, "results": results, "pag": pag, "days_back": days_back, "sort_by": sort_by, "highlight_terms": get_highlight_terms(q)})
 
 
 @router.get("/comment/{comment_id}/context", response_class=HTMLResponse)
-def comment_context(comment_id: str, request: Request, db: Session = Depends(get_db)):
+def comment_context(comment_id: str, request: Request, q: str = "", db: Session = Depends(get_db)):
     comment = db.query(Comment).filter(Comment.id == comment_id).first()
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
@@ -213,7 +221,7 @@ def comment_context(comment_id: str, request: Request, db: Session = Depends(get
     )
     return templates.TemplateResponse(
         request, "_comment_context.html",
-        {"ancestors": ancestors, "comment": comment, "children": children}
+        {"ancestors": ancestors, "comment": comment, "children": children, "highlight_terms": get_highlight_terms(q)}
     )
 
 

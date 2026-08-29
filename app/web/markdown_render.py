@@ -20,6 +20,8 @@ _ALLOWED_SCHEMES = {"http", "https", "mailto"}
 
 _md = markdown.Markdown(extensions=["tables", "pymdownx.tilde", "pymdownx.magiclink"])
 
+_TAG_SPLIT_PATTERN = re.compile(r"(<[^>]+>)")
+
 
 def _convert_giphy(body: str) -> str:
     return _GIPHY_PATTERN.sub(r"[GIF](https://giphy.com/gifs/\1)", body)
@@ -52,3 +54,17 @@ def render_markdown(body: str) -> Markup:
         url_schemes=_ALLOWED_SCHEMES,
     )
     return Markup(clean)
+
+
+def highlight_terms(html, terms) -> Markup:
+    html = str(html) if html else ""
+    terms = sorted({t for t in terms if t}, key=len, reverse=True) if terms else []
+    if not html or not terms:
+        return Markup(html)
+
+    pattern = re.compile("(" + "|".join(re.escape(t) for t in terms) + ")", re.IGNORECASE)
+    parts = _TAG_SPLIT_PATTERN.split(html)
+    for i, part in enumerate(parts):
+        if not part.startswith("<"):
+            parts[i] = pattern.sub(r"<mark>\1</mark>", part)
+    return Markup("".join(parts))

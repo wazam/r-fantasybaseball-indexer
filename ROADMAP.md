@@ -20,10 +20,8 @@ Collected ideas for future development. Not actively planned or prioritized.
 
 8. **Search Autocomplete**: show name suggestions as you type in the search bar, drawing from terms and players already present in the archive.
 
-9. **Search Highlighting**: highlight the matched search term inside each comment body on the results page so the relevant text stands out at a glance.
+9. **Progressive Web App**: add a service worker and web manifest so the app can be fully installed to your home screen and used offline with cached data.
 
-10. **Progressive Web App**: add a service worker and web manifest so the app can be fully installed to your home screen and used offline with cached data.
+10. **Activity Alerts**: get notified when something notable happens in the archive, such as a sudden spike in mentions of a player or a thread crossing an unusual activity threshold. Delivery options could include push notifications or an in-app banner.
 
-11. **Activity Alerts**: get notified when something notable happens in the archive, such as a sudden spike in mentions of a player or a thread crossing an unusual activity threshold. Delivery options could include push notifications or an in-app banner.
-
-12. **Calendar View**: pick a start and end date from a calendar to scope search results to a specific date range of threads, instead of relying on the Days Back filter.
+11. **Calendar View**: pick a start and end date from a calendar to scope search results to a specific date range of threads, instead of relying on the Days Back filter.
