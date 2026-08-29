@@ -8,6 +8,8 @@ services:
       - ./data:/app/data
     environment:
       - TZ=UTC
+      # - PUID=1000  # Match the host user that owns ./data, if not the default 1000
+      # - PGID=1000
     restart: unless-stopped
 
   scheduler:
@@ -22,5 +24,7 @@ services:
       # - SCHEDULER_INTERVAL_MINUTES=60
       # - BACKFILL_DATE=auto        # Backfill from Feb 1 of current year on first startup
       # - BACKFILL_DATE=2026-02-10  # Or specify a custom cutoff date
+      # - PUID=1000  # Match the host user that owns ./data, if not the default 1000
+      # - PGID=1000
     command: ["./.venv/bin/python", "-m", "app.startup"]
     restart: unless-stopped

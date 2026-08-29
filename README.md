@@ -208,6 +208,8 @@ For running without Docker using a local Python environment.
 | `BACKFILL_DATE` | Backfill missing threads on container startup before the scheduler begins. Set to `auto` for Feb 1 of the current year, or a specific `YYYY-MM-DD` date. Leave unset to skip. | No | |
 | `SCHEDULER_INTERVAL_MINUTES` | How often the scheduler runs. Each thread with 2,000-4,000 comments takes roughly 2-3 minutes to fetch, so values below 15 are not practical. | No | `60` |
 | `TZ` | Timezone for displaying dates and times in the web UI. Accepts any [tz database identifier](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List). | No | `UTC` |
+| `PUID` | User ID the container runs as. Set this to match the owner of your `./data` directory if it isn't the default. | No | `1000` |
+| `PGID` | Group ID the container runs as. Set this to match the group that owns your `./data` directory if it isn't the default. | No | `1000` |
 
 ## Screenshots
 

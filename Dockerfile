@@ -38,15 +38,22 @@ ARG USER_GID=${USER_UID}
 RUN groupadd --gid ${USER_GID} ${USERNAME} && \
     useradd --uid ${USER_UID} --gid ${USER_GID} --create-home ${USERNAME}
 
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gosu && \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
+
+ENV PYTHONUNBUFFERED=1
 
 COPY --from=builder /app/.venv/ /app/.venv/
 COPY app/ ./app/
+COPY entrypoint.sh /entrypoint.sh
 
-RUN mkdir -p /app/data && chown -R ${USERNAME}:${USERNAME} /app
+RUN mkdir -p /app/data && chown -R ${USERNAME}:${USERNAME} /app && \
+    chmod +x /entrypoint.sh
 
 EXPOSE 9009/tcp
 
-USER ${USERNAME}
-
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["./.venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "9009"]
