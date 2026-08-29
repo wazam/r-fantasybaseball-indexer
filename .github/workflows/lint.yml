@@ -1,6 +1,6 @@
 # https://github.com/actions/starter-workflows/blob/main/ci/python-app.yml
 
-name: Lint
+name: Python Lint
 
 on:
   push:

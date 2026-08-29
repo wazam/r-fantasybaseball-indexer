@@ -1,6 +1,6 @@
 # https://github.com/peter-evans/docker-compose-actions-workflow
 
-name: Test Docker Compose Stack
+name: Compose Test
 
 on:
   push:
