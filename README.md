@@ -45,7 +45,12 @@
 
 ## Set Up Reddit API Access
 
-All install methods require a Reddit API app. Create one at [reddit.com/prefs/apps](https://www.reddit.com/prefs/apps):
+All install methods require a Reddit API app.
+
+> [!WARNING]
+> Reddit closed self-service API access starting November 2025 under its new [Responsible Builder Policy](https://www.reddit.com/r/redditdev/comments/1oug31u/introducing_the_responsible_builder_policy_new/). New apps now require approval, which tends to go unanswered for small hobby projects like this one. If you already have Reddit API credentials, they still work fine.
+
+If you do have access, create an app at [reddit.com/prefs/apps](https://www.reddit.com/prefs/apps):
 
 1. Click **"create another app..."**
 2. Set the name to `Anything Goes Archive`, type to **script**, and redirect URI to `http://localhost`
@@ -195,7 +200,7 @@ For running without Docker using a local Python environment.
 | `REDDIT_CLIENT_SECRET` | Reddit app client secret. | Yes | |
 | `THREAD_TTL_HOURS` | Hours a thread stays active and continues to be refreshed before being archived. | No | `24` |
 | `BACKFILL_DATE` | Backfill missing threads on container startup before the scheduler begins. Set to a `YYYY-MM-DD` cutoff date. Leave unset to skip. | No | |
-| `SCHEDULER_INTERVAL_MINUTES` | How often the scheduler runs. Each thread with 2,000-4,000 comments takes roughly 2-3 minutes to fetch, so values below 15 are not practical. | No | `60` |
+| `SCHEDULER_INTERVAL_MINUTES` | How often the scheduler runs. Each thread with 1,000-3,000 comments takes roughly 2-3 minutes to fetch, so values below 15 are not practical. | No | `60` |
 | `TZ` | Timezone for displaying dates and times in the web UI. Accepts any [tz database identifier](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List). | No | `UTC` |
 | `PUID` | User ID the container runs as. Set this to match the owner of your `./data` directory if it isn't the default. | No | `1000` |
 | `PGID` | Group ID the container runs as. Set this to match the group that owns your `./data` directory if it isn't the default. | No | `1000` |
