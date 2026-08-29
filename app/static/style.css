@@ -222,9 +222,41 @@ html.dark a.comment-time { color: #4fbdff; }
 .comment-body {
   font-size: 0.9rem;
   line-height: 1.5;
-  white-space: pre-wrap;
   word-break: break-word;
 }
+
+.comment-body p,
+.comment-body ul,
+.comment-body ol,
+.comment-body blockquote { margin: 0.3rem 0; }
+
+.comment-body p:first-child,
+.comment-body ul:first-child,
+.comment-body ol:first-child { margin-top: 0; }
+
+.comment-body p:last-child,
+.comment-body ul:last-child,
+.comment-body ol:last-child { margin-bottom: 0; }
+
+.comment-body ul,
+.comment-body ol { padding-left: 1.3rem; }
+
+.comment-body li { margin: 0.1rem 0; }
+
+.comment-body table {
+  border-collapse: collapse;
+  margin: 0.4rem 0;
+  font-size: 0.85rem;
+}
+
+.comment-body th,
+.comment-body td {
+  border: 1px solid #edeff1;
+  padding: 0.3rem 0.6rem;
+  text-align: left;
+}
+
+.comment-body th { background: #f6f7f8; font-weight: 600; }
 
 /* === SEARCH RESULTS === */
 .result-count { font-size: 0.85rem; color: #7c7c7c; margin-bottom: 0.75rem; }
@@ -682,6 +714,9 @@ html.dark .comment.depth-2,
 html.dark .comment.depth-3,
 html.dark .comment.depth-4 { border-left-color: #474748; }
 html.dark .comment-author { color: #d7dadc; }
+html.dark .comment-body th,
+html.dark .comment-body td { border-color: #343536; }
+html.dark .comment-body th { background: #272729; }
 html.dark .comment-flair { background: #343536; color: #d7dadc; }
 html.dark .filter-label,
 html.dark .comment-time,

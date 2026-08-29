@@ -19,7 +19,7 @@
           <a class="comment-time" href="{{ item.comment.permalink }}" target="_blank" rel="noopener" data-utc="{{ item.comment.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ item.comment.created_utc | localdt('%b %-d, %Y %-I:%M %p') }}</a>
           <button class="context-btn" onclick="toggleContext('{{ item.comment.id }}', this)">Context</button>
         </div>
-        <div class="comment-body">{{ item.comment.body }}</div>
+        <div class="comment-body">{{ item.comment.body | render_markdown }}</div>
         <div class="context-container" id="ctx-{{ item.comment.id }}" style="display:none"></div>
       </li>
       {% endfor %}

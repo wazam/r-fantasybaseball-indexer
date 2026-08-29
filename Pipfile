@@ -12,6 +12,9 @@ python-dotenv = "*"
 apscheduler = "*"
 jinja2 = "*"
 python-multipart = "*"
+markdown = "*"
+pymdown-extensions = "*"
+nh3 = "*"
 
 [dev-packages]
 flake8 = "*"

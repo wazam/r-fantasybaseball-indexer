@@ -10,6 +10,7 @@ from starlette.templating import Jinja2Templates
 
 from app.db import SessionLocal
 from app.models import Comment, Thread
+from app.web.markdown_render import render_markdown
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/web/templates")
@@ -24,6 +25,7 @@ def _localdt(dt, fmt="%b %-d, %-I:%M %p"):
 
 
 templates.env.filters["localdt"] = _localdt
+templates.env.filters["render_markdown"] = render_markdown
 
 
 def get_db():

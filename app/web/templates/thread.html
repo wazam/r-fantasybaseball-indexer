@@ -24,7 +24,7 @@
           <span class="comment-score">{{ c.score }}</span>
           <a class="comment-time" href="{{ c.permalink }}" target="_blank" rel="noopener" data-utc="{{ c.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ c.created_utc | localdt('%b %-d, %-I:%M %p') }}</a>
         </div>
-        <div class="comment-body">{{ c.body }}</div>
+        <div class="comment-body">{{ c.body | render_markdown }}</div>
       </div>
     {% endfor %}
   </div>

@@ -8,7 +8,7 @@
       <span class="comment-score">{{ a.score }}</span>
       <a class="comment-time" href="{{ a.permalink }}" target="_blank" rel="noopener" data-utc="{{ a.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ a.created_utc | localdt('%b %-d, %-I:%M %p') }}</a>
     </div>
-    <div class="comment-body">{{ a.body }}</div>
+    <div class="comment-body">{{ a.body | render_markdown }}</div>
   </div>
   {% endfor %}
 
@@ -20,7 +20,7 @@
       <span class="comment-score">{{ comment.score }}</span>
       <a class="comment-time" href="{{ comment.permalink }}" target="_blank" rel="noopener" data-utc="{{ comment.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ comment.created_utc | localdt('%b %-d, %-I:%M %p') }}</a>
     </div>
-    <div class="comment-body">{{ comment.body }}</div>
+    <div class="comment-body">{{ comment.body | render_markdown }}</div>
   </div>
 
   {% for c in children %}
@@ -31,7 +31,7 @@
       <span class="comment-score">{{ c.score }}</span>
       <a class="comment-time" href="{{ c.permalink }}" target="_blank" rel="noopener" data-utc="{{ c.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ c.created_utc | localdt('%b %-d, %-I:%M %p') }}</a>
     </div>
-    <div class="comment-body">{{ c.body }}</div>
+    <div class="comment-body">{{ c.body | render_markdown }}</div>
   </div>
   {% endfor %}
 </div>
