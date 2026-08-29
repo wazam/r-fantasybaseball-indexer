@@ -1,6 +1,11 @@
 from datetime import datetime, timedelta, UTC
+import logging
+
+from prawcore.exceptions import PrawcoreException
 
 from app.config import get_reddit_client, get_active_hours
+
+logger = logging.getLogger(__name__)
 
 reddit = get_reddit_client()
 
@@ -27,30 +32,34 @@ def get_thread_urls(only_active=True, cutoff_date=None):
     query = "Anything Goes Thread"
     subreddit = reddit.subreddit("fantasybaseball")
 
-    for post in subreddit.search(query, sort="new", time_filter="year", limit=None):
-        if not is_valid_thread(post.title):
-            continue
-        if post.created_utc < cutoff_date:
-            continue
+    try:
+        for post in subreddit.search(query, sort="new", time_filter="year", limit=None):
+            if not is_valid_thread(post.title):
+                continue
+            if post.created_utc < cutoff_date:
+                continue
 
-        posted_at = datetime.fromtimestamp(post.created_utc, UTC)
-        if only_active and not is_active_thread(posted_at):
-            continue
+            posted_at = datetime.fromtimestamp(post.created_utc, UTC)
+            if only_active and not is_active_thread(posted_at):
+                continue
 
-        if post.id in seen_ids:
-            continue
+            if post.id in seen_ids:
+                continue
 
-        urls.append(post.url)
-        seen_ids.add(post.id)
+            urls.append(post.url)
+            seen_ids.add(post.id)
+    except PrawcoreException as e:
+        logger.error(f"Couldn't search for threads: {e}")
 
     return urls
 
 
 # Run with: pipenv run python -m app.threads.search
 if __name__ == "__main__":
-    print("[SEARCH] Fetching recent 'Anything Goes' thread URLs.")
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-8s %(name)s %(message)s")
+    logger.info("Fetching recent 'Anything Goes' thread URLs.")
     urls = get_thread_urls()
-    print(f"[INFO] Found {len(urls)} active thread URL(s).\n")
+    logger.info(f"Found {len(urls)} active thread URL(s).")
     for url in urls:
-        print(f"[INFO] Found active thread: {url}")
-    print("\n[DONE] Thread search completed successfully.")
+        logger.info(f"Found active thread: {url}")
+    logger.info("Thread search completed successfully.")
