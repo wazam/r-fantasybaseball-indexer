@@ -29,11 +29,11 @@ jobs:
       - name: Create data directory
         run: mkdir -p data
 
-      - name: Start web service
+      - name: Start app service
         run: |
           REDDIT_CLIENT_ID=test \
           REDDIT_CLIENT_SECRET=test \
-          docker compose up -d web
+          docker compose up -d app
 
       - name: Wait for web service
         run: sleep 30

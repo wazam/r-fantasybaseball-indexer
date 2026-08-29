@@ -26,13 +26,13 @@
 
 ## Features
 
-- **Scheduler** -- automatically fetches newly posted threads, refreshes active ones, and marks old threads inactive on a configurable interval
-- **Comment Archiving** -- stores full comment trees with upvote scores, league flairs, reply counts, and parent/child relationships for full thread reconstruction
-- **Duplicate Prevention** -- tracks Reddit submission and comment IDs to avoid storing duplicates
-- **Change Tracking** -- updates edited comment bodies and upvote scores on each refresh; preserves deleted and removed comments in the archive
-- **Rate Limit Handling** -- retries automatically when Reddit API rate limits are hit
-- **Backfill** -- CLI tool to import threads missed while the scheduler was offline
-- **Web UI** -- mobile-friendly browser interface for browsing threads, searching comments, and filtering by date and sort order
+- **Scheduler**: runs in the same process as the web UI; automatically fetches newly posted threads, refreshes active ones, and marks old threads inactive on a configurable interval
+- **Comment Archiving**: stores full comment trees with upvote scores, league flairs, reply counts, and parent/child relationships for full thread reconstruction
+- **Duplicate Prevention**: tracks Reddit submission and comment IDs to avoid storing duplicates
+- **Change Tracking**: updates edited comment bodies and upvote scores on each refresh; preserves deleted and removed comments in the archive
+- **Rate Limit Handling**: retries automatically when Reddit API rate limits are hit
+- **Backfill**: CLI tool to import threads missed while the scheduler was offline
+- **Web UI**: mobile-friendly browser interface for browsing threads, searching comments, and filtering by date and sort order
 
 ## Tech Stack
 
@@ -76,30 +76,25 @@ The image is published to [GitHub Container Registry](https://github.com/wazam/r
 
    ```yaml
    services:
-     web:
+     app:
        image: ghcr.io/wazam/r-fantasybaseball-indexer:latest
        ports:
          - "9009:9009"
        volumes:
          - ./data:/app/data
        environment:
-         - TZ=UTC
-       restart: unless-stopped
-
-     scheduler:
-       image: ghcr.io/wazam/r-fantasybaseball-indexer:latest
-       volumes:
-         - ./data:/app/data
-       environment:
-         - REDDIT_CLIENT_ID=        # Required - see Set Up Reddit API Access in README
-         - REDDIT_CLIENT_SECRET=    # Required - see Set Up Reddit API Access in README
+         - REDDIT_CLIENT_ID= # REQUIRED, see README
+         - REDDIT_CLIENT_SECRET= # REQUIRED, see README
          # - THREAD_TTL_HOURS=24
          # - SCHEDULER_INTERVAL_MINUTES=60
-         # - BACKFILL_DATE=auto         # Backfill from Feb 1 of current year on first startup
-         # - BACKFILL_DATE=2026-02-10   # Or specify a custom cutoff date
-       command: ["./.venv/bin/python", "-m", "app.startup"]
+         # - BACKFILL_DATE= #YYYY-MM-DD
+         # - TZ=UTC
+         # - PUID=1000
+         # - PGID=1000
        restart: unless-stopped
    ```
+
+   The web UI and scheduler run together in a single container.
 
 3. **Start the stack**
 
@@ -173,28 +168,22 @@ For running without Docker using a local Python environment.
 
 5. **Backfill missing threads (optional)**
 
-   Imports threads missed while the scheduler was offline. Pass a `YYYY-MM-DD` cutoff date to set how far back to look. This may take a couple of hours for large date ranges. Omit the date to default to 7 days back.
+   Imports threads missed while the scheduler was offline. Requires a `YYYY-MM-DD` cutoff date to set how far back to look. This may take a couple of hours for large date ranges.
 
    ```sh
    pipenv run python -m app.threads.backfill 2026-02-10
    ```
 
-6. **Start the scheduler** (Terminal 1)
+6. **Start the app**
 
    ```sh
-   pipenv run python -m app.scheduler
+   pipenv run uvicorn app.main:app --reload --host 0.0.0.0 --port 9009 --log-config app/logging_config.json
    ```
 
-7. **Start the web UI** (Terminal 2)
+   The web UI and scheduler run together in the same process. Then open [http://localhost:9009](http://localhost:9009) in your browser.
 
-   ```sh
-   pipenv run uvicorn app.main:app --reload --host 0.0.0.0 --port 9009
-   ```
-
-   Then open [http://localhost:9009](http://localhost:9009) in your browser.
-
-   > [!TIP]
-   > The `--host 0.0.0.0` flag is required to reach the UI from other devices on your local network. Omit it for localhost-only access.
+> [!TIP]
+> The `--host 0.0.0.0` flag is required to reach the UI from other devices on your local network. Omit it for localhost-only access.
 
 ---
 

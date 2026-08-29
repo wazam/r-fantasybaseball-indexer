@@ -1,30 +1,18 @@
 services:
-  web:
+  app:
     image: ghcr.io/wazam/r-fantasybaseball-indexer:latest
-    container_name: anything-goes-web
+    container_name: anything-goes-archive
     ports:
       - "9009:9009"
     volumes:
       - ./data:/app/data
     environment:
-      - TZ=UTC
-      # - PUID=1000  # Match the host user that owns ./data, if not the default 1000
-      # - PGID=1000
-    restart: unless-stopped
-
-  scheduler:
-    image: ghcr.io/wazam/r-fantasybaseball-indexer:latest
-    container_name: anything-goes-scheduler
-    volumes:
-      - ./data:/app/data
-    environment:
-      - REDDIT_CLIENT_ID=       # Required - see Set Up Reddit API Access in README
-      - REDDIT_CLIENT_SECRET=   # Required - see Set Up Reddit API Access in README
+      - REDDIT_CLIENT_ID= # REQUIRED, see README
+      - REDDIT_CLIENT_SECRET= # REQUIRED, see README
       # - THREAD_TTL_HOURS=24
       # - SCHEDULER_INTERVAL_MINUTES=60
-      # - BACKFILL_DATE=auto        # Backfill from Feb 1 of current year on first startup
-      # - BACKFILL_DATE=2026-02-10  # Or specify a custom cutoff date
-      # - PUID=1000  # Match the host user that owns ./data, if not the default 1000
+      # - BACKFILL_DATE= #YYYY-MM-DD
+      # - TZ=UTC
+      # - PUID=1000
       # - PGID=1000
-    command: ["./.venv/bin/python", "-m", "app.startup"]
     restart: unless-stopped
