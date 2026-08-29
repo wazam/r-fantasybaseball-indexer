@@ -11,6 +11,7 @@ from starlette.templating import Jinja2Templates
 from app.db import SessionLocal
 from app.models import Comment, Thread
 from app.web.markdown_render import render_markdown
+from app.web.search_query import apply_search_filters, parse_search_query
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/web/templates")
@@ -173,7 +174,7 @@ def search(request: Request, q: str = "", page: int = 1, per_page: int = 100, da
         sort_by = "new"
     base_query = db.query(Comment, Thread).join(Thread, Comment.thread_id == Thread.id)
     if q:
-        base_query = base_query.filter(Comment.body.ilike(f"%{q}%"))
+        base_query = apply_search_filters(base_query, parse_search_query(q))
     cutoff = get_cutoff(days_back)
     if cutoff:
         base_query = base_query.filter(Comment.created_utc >= cutoff)

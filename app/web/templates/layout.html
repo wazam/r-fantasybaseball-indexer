@@ -27,7 +27,7 @@
       </a>
       <form class="search-form" action="/search" method="get">
         <div class="search-input-wrap">
-          <input type="search" name="q" placeholder="Search comments…" value="{{ request.query_params.get('q', '') }}" id="search-input">
+          <input type="search" name="q" placeholder="Search comments…" value="{{ request.query_params.get('q', '') }}" id="search-input" title="word word = either word matches. &quot;exact phrase&quot; = literal match. +word = must include. -word = must exclude. author:name, flair:text, score:>10">
           <kbd class="search-shortcut">/</kbd>
         </div>
         <button type="submit" class="icon-btn" aria-label="Search">
