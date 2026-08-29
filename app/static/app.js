@@ -62,7 +62,9 @@ function timeAgo(utcStr) {
   var mins = Math.floor(diff / 60000);
   var hours = Math.floor(diff / 3600000);
   var days = Math.floor(diff / 86400000);
-  if (days >= 7) return null;
+  var weeks = Math.floor(days / 7);
+  if (days >= 30) return null;
+  if (weeks >= 1) return weeks + 'w ago';
   if (days >= 1) return days + 'd ago';
   if (hours >= 1) return hours + 'h ago';
   if (mins >= 1) return mins + 'm ago';
