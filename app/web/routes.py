@@ -8,6 +8,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from starlette.templating import Jinja2Templates
 
+from sqlalchemy import func
+
 from app.db import SessionLocal
 from app.models import Comment, Thread
 from app.web.markdown_render import highlight_terms, render_markdown
@@ -222,6 +224,45 @@ def comment_context(comment_id: str, request: Request, q: str = "", db: Session 
     return templates.TemplateResponse(
         request, "_comment_context.html",
         {"ancestors": ancestors, "comment": comment, "children": children, "highlight_terms": get_highlight_terms(q)}
+    )
+
+
+@router.get("/author/{username}/summary", response_class=HTMLResponse)
+def author_summary(username: str, request: Request, db: Session = Depends(get_db)):
+    stats = (
+        db.query(
+            func.count(Comment.id),
+            func.sum(Comment.score),
+            func.min(Comment.created_utc),
+            func.max(Comment.created_utc),
+        )
+        .filter(Comment.author == username)
+        .first()
+    )
+    total, total_score, first_seen, last_seen = stats
+    if not total:
+        raise HTTPException(status_code=404, detail="No comments found for this author")
+
+    recent = (
+        db.query(Comment, Thread)
+        .join(Thread, Comment.thread_id == Thread.id)
+        .filter(Comment.author == username)
+        .order_by(Comment.created_utc.desc())
+        .limit(15)
+        .all()
+    )
+    recent_comments = [{"comment": c, "thread": t} for c, t in recent]
+
+    return templates.TemplateResponse(
+        request, "_author_summary.html",
+        {
+            "username": username,
+            "total": total,
+            "total_score": total_score or 0,
+            "first_seen": first_seen,
+            "last_seen": last_seen,
+            "recent_comments": recent_comments,
+        }
     )
 
 

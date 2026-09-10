@@ -49,6 +49,9 @@
   <main class="main-content">
     {% block content %}{% endblock %}
   </main>
+  <div class="author-summary-overlay" id="author-summary-overlay" onclick="if (event.target === this) closeAuthorSummary()">
+    <div class="author-summary-panel" id="author-summary-panel" role="dialog" aria-modal="true"></div>
+  </div>
   <script src="{{ url_for('static', path='app.js') }}"></script>
 </body>
 </html>

@@ -1,0 +1,41 @@
+<div class="author-summary">
+  <div class="author-summary-header">
+    <h2 class="author-summary-name">u/{{ username }}</h2>
+    <button class="author-summary-close" aria-label="Close" onclick="closeAuthorSummary()">&times;</button>
+  </div>
+
+  <div class="author-summary-stats">
+    <div class="author-stat">
+      <span class="author-stat-value">{{ "{:,}".format(total) }}</span>
+      <span class="author-stat-label">comment{% if total != 1 %}s{% endif %}</span>
+    </div>
+    <div class="author-stat">
+      <span class="author-stat-value">{{ "{:,}".format(total_score) }}</span>
+      <span class="author-stat-label">total score</span>
+    </div>
+    <div class="author-stat">
+      <span class="author-stat-value">{{ first_seen | localdt('%b %-d, %Y') }}</span>
+      <span class="author-stat-label">first seen</span>
+    </div>
+    <div class="author-stat">
+      <span class="author-stat-value">{{ last_seen | localdt('%b %-d, %Y') }}</span>
+      <span class="author-stat-label">last seen</span>
+    </div>
+  </div>
+
+  <h3 class="author-summary-subheading">Recent Comments</h3>
+  <ul class="author-summary-comments">
+    {% for item in recent_comments %}
+    <li class="author-summary-comment">
+      <div class="search-result-meta">
+        <span class="comment-score">{{ item.comment.score }}</span>
+        <a class="comment-time" href="{{ item.comment.permalink }}" target="_blank" rel="noopener" data-utc="{{ item.comment.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ item.comment.created_utc | localdt('%b %-d, %Y %-I:%M %p') }}</a>
+        <span class="author-summary-thread">{{ item.thread.title }}</span>
+      </div>
+      <div class="comment-body">{{ item.comment.body | render_markdown }}</div>
+    </li>
+    {% endfor %}
+  </ul>
+
+  <a class="author-summary-viewall" href="/search?q=author%3A{{ username | urlencode }}">See all {{ "{:,}".format(total) }} comments by u/{{ username }} &rarr;</a>
+</div>

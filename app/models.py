@@ -31,7 +31,7 @@ class Comment(Base):
 
     parent_id = Column(String, nullable=True)  # NULL if top-level comment
     body = Column(Text, nullable=False)
-    author = Column(String, nullable=False)
+    author = Column(String, nullable=False, index=True)
     flair = Column(String, nullable=True)  # NULL if unset
     permalink = Column(String, nullable=False)
 

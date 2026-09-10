@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 from app.config import get_database_url
@@ -12,3 +12,8 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def init_db():
     Base.metadata.create_all(bind=engine)
+    # create_all() only creates missing tables, so a database that already had
+    # the comments table before the author column was indexed needs this run
+    # explicitly too. Safe to run on every startup either way.
+    with engine.begin() as conn:
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_comments_author ON comments(author)"))

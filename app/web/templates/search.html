@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% from "_pagination.html" import render as pagination %}
+{% from "_macros.html" import author_icon %}
 {% block title %}{% if q %}Search "{{ q }}"{% else %}All Comments{% endif %} • Anything Goes Archive{% endblock %}
 {% block content %}
   <h1 class="page-heading">
@@ -13,7 +14,7 @@
       <li class="search-result-item" id="sr-{{ item.comment.id }}">
         <div class="search-result-meta">
           <button class="collapse-btn" aria-label="Collapse">[&minus;]</button>
-          <span class="comment-author">{{ item.comment.author }}</span>
+          <span class="comment-author">{{ item.comment.author }}</span>{{ author_icon(item.comment.author) }}
           {% if item.comment.flair %}<span class="comment-flair">{{ item.comment.flair }}</span>{% endif %}
           <span class="comment-score">{{ item.comment.score }}</span>
           <a class="comment-time" href="{{ item.comment.permalink }}" target="_blank" rel="noopener" data-utc="{{ item.comment.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ item.comment.created_utc | localdt('%b %-d, %Y %-I:%M %p') }}</a>

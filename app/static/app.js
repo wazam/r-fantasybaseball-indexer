@@ -151,3 +151,36 @@ document.addEventListener('DOMContentLoaded', function() {
   applyRelativeTimestamps();
   applyAutoCollapse();
 });
+
+// Author summary popup
+function openAuthorSummary(username, event) {
+  if (event) event.stopPropagation();
+  var overlay = document.getElementById('author-summary-overlay');
+  var panel = document.getElementById('author-summary-panel');
+  if (!overlay || !panel) return;
+  panel.innerHTML = '<div class="author-summary-loading">Loading…</div>';
+  overlay.classList.add('open');
+  document.body.classList.add('modal-open');
+  fetch('/author/' + encodeURIComponent(username) + '/summary')
+    .then(function(r) {
+      if (!r.ok) throw new Error('not found');
+      return r.text();
+    })
+    .then(function(html) {
+      panel.innerHTML = html;
+    })
+    .catch(function() {
+      panel.innerHTML = '<div class="author-summary-loading">Could not load profile.</div>';
+    });
+}
+
+function closeAuthorSummary() {
+  var overlay = document.getElementById('author-summary-overlay');
+  if (!overlay) return;
+  overlay.classList.remove('open');
+  document.body.classList.remove('modal-open');
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeAuthorSummary();
+});
