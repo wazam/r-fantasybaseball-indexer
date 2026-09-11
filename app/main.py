@@ -88,6 +88,11 @@ app.include_router(router)
 templates = Jinja2Templates(directory="app/web/templates")
 
 
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc: HTTPException):
     return templates.TemplateResponse(request, "404.html", status_code=404)

@@ -55,5 +55,8 @@ RUN mkdir -p /app/data && chown -R ${USERNAME}:${USERNAME} /app && \
 
 EXPOSE 9009/tcp
 
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD ["./.venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9009/health', timeout=3)"]
+
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["./.venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "9009", "--log-config", "app/logging_config.json"]
