@@ -167,6 +167,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (wideToggle) wideToggle.checked = localStorage.getItem(WIDE_KEY) === 'true';
   applyRelativeTimestamps();
   applyAutoCollapse();
+  markTruncatedFlairs();
 });
 
 // Author summary popup
@@ -210,3 +211,9 @@ document.addEventListener('click', function(e) {
   if (!isExpanded && flair.scrollWidth <= flair.clientWidth + 1) return;
   flair.classList.toggle('expanded');
 });
+
+function markTruncatedFlairs() {
+  document.querySelectorAll('.comment-flair:not(.expanded)').forEach(function(flair) {
+    if (flair.scrollWidth > flair.clientWidth + 1) flair.classList.add('truncated');
+  });
+}
