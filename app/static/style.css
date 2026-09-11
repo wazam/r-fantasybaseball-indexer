@@ -584,6 +584,23 @@ html.dark .context-match { background: rgba(255,69,0,0.08); }
 
 .settings-note { font-size: 0.85rem; color: #7c7c7c; margin-bottom: 0.75rem; }
 
+.search-help-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #1a1a1b;
+}
+
+.search-help-list code {
+  background: #edeff1;
+  color: #1c1c1c;
+  padding: 0.05rem 0.35rem;
+  border-radius: 3px;
+  font-size: 0.8rem;
+}
+
 .settings-pref {
   display: flex;
   align-items: flex-start;
@@ -938,6 +955,8 @@ html.dark .result-count,
 html.dark .settings-note,
 html.dark .pref-note,
 html.dark .settings-empty { color: #818384; }
+html.dark .search-help-list { color: #d7dadc; }
+html.dark .search-help-list code { background: #272729; color: #d7dadc; }
 html.dark .page-nav { background: #272729; border-color: #343536; color: #d7dadc; }
 html.dark .page-nav.disabled { background: #1a1a1b; color: #474748; }
 html.dark .page-nav:hover:not(.disabled) { background: #343536; }
