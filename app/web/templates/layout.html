@@ -12,7 +12,9 @@
   <meta name="theme-color" content="#ff4500">
   <link rel="stylesheet" href="/static/style.css?v={{ static_version }}">
   <script>
-    if (localStorage.getItem('aga_theme') === 'dark') document.documentElement.classList.add('dark');
+    var savedTheme = localStorage.getItem('aga_theme');
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (savedTheme ? savedTheme === 'dark' : prefersDark) document.documentElement.classList.add('dark');
     if (localStorage.getItem('aga_wider_width') === 'true') document.documentElement.classList.add('wide');
     var ts = localStorage.getItem('aga_text_size');
     if (ts === 'small') document.documentElement.classList.add('text-small');

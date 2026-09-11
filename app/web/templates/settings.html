@@ -21,13 +21,14 @@
 
     <div class="settings-pref">
       <div class="pref-info">
-        <span class="pref-label">Night Mode</span>
-        <span class="pref-note">Switches to a dark color scheme, easier on the eyes in low light.</span>
+        <span class="pref-label">Theme</span>
+        <span class="pref-note">Switches between light and dark color schemes. Auto follows your device's system setting.</span>
       </div>
-      <label class="toggle-switch" aria-label="Toggle Night Mode">
-        <input type="checkbox" id="night-mode-toggle" onchange="toggleNightMode()">
-        <span class="toggle-slider"></span>
-      </label>
+      <div class="segment-control">
+        <button class="segment-btn" data-theme="auto" onclick="setTheme('auto')">Auto</button>
+        <button class="segment-btn" data-theme="light" onclick="setTheme('light')">Light</button>
+        <button class="segment-btn" data-theme="dark" onclick="setTheme('dark')">Dark</button>
+      </div>
     </div>
 
     <div class="settings-pref">
@@ -83,7 +84,7 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      syncNightModeToggle();
+      syncThemeControl();
 
       var relToggle = document.getElementById('rel-ts-toggle');
       if (relToggle) relToggle.checked = localStorage.getItem('aga_relative_timestamps') !== 'false';

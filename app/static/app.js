@@ -21,22 +21,39 @@ function setTextSize(size) {
 function syncTextSizeControl() {
   var size = localStorage.getItem(TEXT_SIZE_KEY) || 'standard';
   document.querySelectorAll('.segment-btn').forEach(function(btn) {
-    btn.classList.toggle('active', btn.dataset.size === size);
+    if (btn.dataset.size) btn.classList.toggle('active', btn.dataset.size === size);
   });
 }
 
-// Night mode
-function toggleNightMode() {
-  var isDark = document.documentElement.classList.toggle('dark');
-  localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
-  syncNightModeToggle();
+// Night mode (Auto / Light / Dark)
+var darkMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+function applyTheme() {
+  var saved = localStorage.getItem(THEME_KEY);
+  var isDark = saved ? saved === 'dark' : darkMediaQuery.matches;
+  document.documentElement.classList.toggle('dark', isDark);
 }
 
-function syncNightModeToggle() {
-  var isDark = document.documentElement.classList.contains('dark');
-  var toggle = document.getElementById('night-mode-toggle');
-  if (toggle) toggle.checked = isDark;
+function setTheme(choice) {
+  if (choice === 'auto') {
+    localStorage.removeItem(THEME_KEY);
+  } else {
+    localStorage.setItem(THEME_KEY, choice);
+  }
+  applyTheme();
+  syncThemeControl();
 }
+
+function syncThemeControl() {
+  var choice = localStorage.getItem(THEME_KEY) || 'auto';
+  document.querySelectorAll('.segment-btn').forEach(function(btn) {
+    if (btn.dataset.theme) btn.classList.toggle('active', btn.dataset.theme === choice);
+  });
+}
+
+darkMediaQuery.addEventListener('change', function() {
+  if (!localStorage.getItem(THEME_KEY)) applyTheme();
+});
 
 // Wider width
 function toggleWiderWidth() {
@@ -144,7 +161,7 @@ document.addEventListener('keydown', function(e) {
 
 document.addEventListener('DOMContentLoaded', function() {
   applyPerPageDefault();
-  syncNightModeToggle();
+  syncThemeControl();
   syncTextSizeControl();
   var wideToggle = document.getElementById('wider-width-toggle');
   if (wideToggle) wideToggle.checked = localStorage.getItem(WIDE_KEY) === 'true';
