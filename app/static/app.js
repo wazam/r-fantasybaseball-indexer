@@ -4,6 +4,65 @@ var REL_TS_KEY = 'aga_relative_timestamps';
 var AUTO_COLLAPSE_KEY = 'aga_auto_collapse';
 var WIDE_KEY = 'aga_wider_width';
 var TEXT_SIZE_KEY = 'aga_text_size';
+var HIDE_FLAIRS_KEY = 'aga_hide_flairs';
+var BLOCKED_USERS_KEY = 'aga_blocked_users';
+var FAVORITED_USERS_KEY = 'aga_favorited_users';
+var SAVED_COMMENTS_KEY = 'aga_saved_comments';
+
+// Kicks off as soon as this script runs (before DOMContentLoaded), so the
+// server's blocked-users list is cached into localStorage before anything
+// that filters/renders based on it needs to read it.
+var blockedUsersReady = fetch('/api/lists/blocked_users')
+  .then(function(r) { return r.json(); })
+  .then(function(items) {
+    saveBlockedUsers(items);
+    return items;
+  })
+  .catch(function() {
+    return getBlockedUsers();
+  });
+
+var favoritedUsersReady = fetch('/api/lists/favorited_users')
+  .then(function(r) { return r.json(); })
+  .then(function(items) {
+    saveFavoritedUsers(items);
+    return items;
+  })
+  .catch(function() {
+    return getFavoritedUsers();
+  });
+
+var savedCommentsReady = fetch('/api/lists/saved_comments')
+  .then(function(r) { return r.json(); })
+  .then(function(items) {
+    saveSavedComments(items);
+    return items;
+  })
+  .catch(function() {
+    return getSavedComments();
+  });
+
+var SYNCED_SETTINGS_KEYS = [REL_TS_KEY, HIDE_FLAIRS_KEY, AUTO_COLLAPSE_KEY];
+
+var settingsReady = fetch('/api/settings')
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    SYNCED_SETTINGS_KEYS.forEach(function(key) {
+      if (Object.prototype.hasOwnProperty.call(data, key)) {
+        localStorage.setItem(key, data[key]);
+      } else {
+        localStorage.removeItem(key);
+      }
+    });
+    // The <head> script already applied hide-flairs synchronously from
+    // whatever was cached locally; correct it now in case the server's
+    // value (e.g. set from a different browser) disagrees.
+    document.documentElement.classList.toggle('hide-flairs', localStorage.getItem(HIDE_FLAIRS_KEY) === 'true');
+    return data;
+  })
+  .catch(function() {
+    return {};
+  });
 
 // Text size
 function setTextSize(size) {
@@ -63,13 +122,316 @@ function toggleWiderWidth() {
   if (toggle) toggle.checked = isWide;
 }
 
-// Relative timestamps — default ON (only off if explicitly set to 'false')
+function persistSetting(key, value) {
+  if (value === null) {
+    fetch('/api/settings/' + key, { method: 'DELETE' }).catch(function() {});
+  } else {
+    fetch('/api/settings/' + key, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ value: value }),
+    }).catch(function() {});
+  }
+}
+
+// Relative timestamps — default OFF (only on if explicitly set to 'true')
 function toggleRelativeTimestamps() {
-  var enabled = localStorage.getItem(REL_TS_KEY) !== 'false';
+  var enabled = localStorage.getItem(REL_TS_KEY) === 'true';
   enabled = !enabled;
-  localStorage.setItem(REL_TS_KEY, enabled ? 'true' : 'false');
+  if (enabled) {
+    localStorage.setItem(REL_TS_KEY, 'true');
+    persistSetting(REL_TS_KEY, 'true');
+  } else {
+    localStorage.removeItem(REL_TS_KEY);
+    persistSetting(REL_TS_KEY, null);
+  }
   var toggle = document.getElementById('rel-ts-toggle');
   if (toggle) toggle.checked = enabled;
+}
+
+// Hide flairs — default OFF (only on if explicitly set to 'true')
+function toggleHideFlairs() {
+  var hidden = document.documentElement.classList.toggle('hide-flairs');
+  if (hidden) {
+    localStorage.setItem(HIDE_FLAIRS_KEY, 'true');
+    persistSetting(HIDE_FLAIRS_KEY, 'true');
+  } else {
+    localStorage.removeItem(HIDE_FLAIRS_KEY);
+    persistSetting(HIDE_FLAIRS_KEY, null);
+  }
+  var toggle = document.getElementById('hide-flairs-toggle');
+  if (toggle) toggle.checked = hidden;
+}
+
+// Blocked users
+function getBlockedUsers() {
+  try {
+    return JSON.parse(localStorage.getItem(BLOCKED_USERS_KEY)) || [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveBlockedUsers(list) {
+  if (list.length) {
+    localStorage.setItem(BLOCKED_USERS_KEY, JSON.stringify(list));
+  } else {
+    localStorage.removeItem(BLOCKED_USERS_KEY);
+  }
+}
+
+function isUserBlocked(username) {
+  return getBlockedUsers().indexOf(username) !== -1;
+}
+
+function addBlockedUser(username) {
+  username = username.trim();
+  if (!username || isUserBlocked(username)) return;
+  removeFavoritedUser(username);
+  var list = getBlockedUsers();
+  list.push(username);
+  saveBlockedUsers(list);
+  fetch('/api/lists/blocked_users', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ item: username }),
+  }).catch(function() {});
+}
+
+function removeBlockedUser(username) {
+  var list = getBlockedUsers().filter(function(u) { return u !== username; });
+  saveBlockedUsers(list);
+  fetch('/api/lists/blocked_users/' + encodeURIComponent(username), { method: 'DELETE' }).catch(function() {});
+}
+
+function applyBlockedUsers() {
+  var blocked = getBlockedUsers();
+  if (!blocked.length) return;
+  document.querySelectorAll('.comment-author').forEach(function(btn) {
+    if (blocked.indexOf(btn.textContent) === -1) return;
+    var container = btn.closest('.comment, .search-result-item, .context-comment');
+    if (container) container.style.display = 'none';
+  });
+}
+
+// Favorited users
+function getFavoritedUsers() {
+  try {
+    return JSON.parse(localStorage.getItem(FAVORITED_USERS_KEY)) || [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveFavoritedUsers(list) {
+  if (list.length) {
+    localStorage.setItem(FAVORITED_USERS_KEY, JSON.stringify(list));
+  } else {
+    localStorage.removeItem(FAVORITED_USERS_KEY);
+  }
+}
+
+function isUserFavorited(username) {
+  return getFavoritedUsers().indexOf(username) !== -1;
+}
+
+function addFavoritedUser(username) {
+  username = username.trim();
+  if (!username || isUserFavorited(username)) return;
+  removeBlockedUser(username);
+  var list = getFavoritedUsers();
+  list.push(username);
+  saveFavoritedUsers(list);
+  fetch('/api/lists/favorited_users', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ item: username }),
+  }).catch(function() {});
+}
+
+function removeFavoritedUser(username) {
+  var list = getFavoritedUsers().filter(function(u) { return u !== username; });
+  saveFavoritedUsers(list);
+  fetch('/api/lists/favorited_users/' + encodeURIComponent(username), { method: 'DELETE' }).catch(function() {});
+}
+
+function applyFavoritedUsers() {
+  var favorited = getFavoritedUsers();
+  if (!favorited.length) return;
+  document.querySelectorAll('.comment-author').forEach(function(btn) {
+    if (favorited.indexOf(btn.textContent) !== -1) btn.classList.add('favorited');
+  });
+}
+
+// Saved comments
+function getSavedComments() {
+  try {
+    return JSON.parse(localStorage.getItem(SAVED_COMMENTS_KEY)) || [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveSavedComments(list) {
+  if (list.length) {
+    localStorage.setItem(SAVED_COMMENTS_KEY, JSON.stringify(list));
+  } else {
+    localStorage.removeItem(SAVED_COMMENTS_KEY);
+  }
+}
+
+function isCommentSaved(commentId) {
+  return getSavedComments().indexOf(commentId) !== -1;
+}
+
+function toggleSavedComment(commentId, btn) {
+  var list = getSavedComments();
+  var idx = list.indexOf(commentId);
+  var nowSaved = idx === -1;
+  if (nowSaved) {
+    list.push(commentId);
+  } else {
+    list.splice(idx, 1);
+  }
+  saveSavedComments(list);
+  if (nowSaved) {
+    fetch('/api/lists/saved_comments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ item: commentId }),
+    }).catch(function() {});
+  } else {
+    fetch('/api/lists/saved_comments/' + encodeURIComponent(commentId), { method: 'DELETE' }).catch(function() {});
+  }
+  if (btn) {
+    var saved = isCommentSaved(commentId);
+    btn.classList.toggle('saved', saved);
+    btn.setAttribute('aria-label', saved ? 'Unsave comment' : 'Save comment');
+    if (!saved) {
+      var savedPageItem = btn.closest('#saved-comments-container .search-result-item');
+      if (savedPageItem) savedPageItem.remove();
+    }
+  }
+}
+
+var CONTEXT_ICON_VIEW = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>';
+var CONTEXT_ICON_HIDE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>';
+
+function toggleContext(commentId, btn) {
+  var container = document.getElementById('ctx-' + commentId);
+  if (container.style.display !== 'none') {
+    container.style.display = 'none';
+    container.innerHTML = '';
+    btn.innerHTML = CONTEXT_ICON_VIEW;
+    btn.setAttribute('aria-label', 'View context');
+    return;
+  }
+  btn.classList.add('loading');
+  var query = document.querySelector('.search-results') ? document.querySelector('.search-results').dataset.query : '';
+  fetch('/comment/' + commentId + '/context' + (query ? '?q=' + encodeURIComponent(query) : ''))
+    .then(function(r) { return r.text(); })
+    .then(function(html) {
+      container.innerHTML = html;
+      container.style.display = '';
+      btn.classList.remove('loading');
+      btn.innerHTML = CONTEXT_ICON_HIDE;
+      btn.setAttribute('aria-label', 'Hide context');
+      markTruncatedFlairs();
+      blockedUsersReady.then(function() {
+        applyBlockedUsers();
+      });
+      favoritedUsersReady.then(function() {
+        applyFavoritedUsers();
+      });
+      savedCommentsReady.then(function() {
+        applySavedComments();
+      });
+      settingsReady.then(function() {
+        applyRelativeTimestamps();
+      });
+    })
+    .catch(function() {
+      btn.classList.remove('loading');
+      btn.innerHTML = CONTEXT_ICON_VIEW;
+    });
+}
+
+function applySavedComments() {
+  var saved = getSavedComments();
+  if (!saved.length) return;
+  document.querySelectorAll('.comment-save-btn').forEach(function(btn) {
+    if (saved.indexOf(btn.dataset.commentId) !== -1) {
+      btn.classList.add('saved');
+      btn.setAttribute('aria-label', 'Unsave comment');
+    }
+  });
+}
+
+function renderUserChipList(containerId, users, removeFn, rerenderFn) {
+  var list = document.getElementById(containerId);
+  if (!list) return;
+  list.innerHTML = '';
+  users.forEach(function(username) {
+    var li = document.createElement('li');
+    li.className = 'blocked-user-chip';
+    var nameBtn = document.createElement('button');
+    nameBtn.className = 'comment-author';
+    nameBtn.textContent = username;
+    nameBtn.setAttribute('aria-label', 'View profile for ' + username);
+    nameBtn.onclick = function(e) { openAuthorSummary(username, e); };
+    var removeBtn = document.createElement('button');
+    removeBtn.className = 'blocked-user-remove';
+    removeBtn.setAttribute('aria-label', 'Remove ' + username);
+    removeBtn.textContent = '×';
+    removeBtn.onclick = function() {
+      removeFn(username);
+      rerenderFn();
+    };
+    li.appendChild(nameBtn);
+    li.appendChild(removeBtn);
+    list.appendChild(li);
+  });
+}
+
+function renderBlockedUsersList() {
+  renderUserChipList('blocked-users-list', getBlockedUsers(), removeBlockedUser, renderBlockedUsersList);
+  syncQuickAddButtons();
+}
+
+function renderFavoritedUsersList() {
+  renderUserChipList('favorited-users-list', getFavoritedUsers(), removeFavoritedUser, renderFavoritedUsersList);
+}
+
+function addFavoritedUserFromInput() {
+  var input = document.getElementById('favorited-user-input');
+  if (!input) return;
+  addFavoritedUser(input.value);
+  input.value = '';
+  renderFavoritedUsersList();
+  renderBlockedUsersList();
+}
+
+function syncQuickAddButtons() {
+  document.querySelectorAll('.quickadd-btn').forEach(function(btn) {
+    var already = isUserBlocked(btn.dataset.username);
+    btn.disabled = already;
+    btn.classList.toggle('added', already);
+  });
+}
+
+function quickAddBlockedUser(username) {
+  addBlockedUser(username);
+  renderBlockedUsersList();
+  renderFavoritedUsersList();
+}
+
+function addBlockedUserFromInput() {
+  var input = document.getElementById('blocked-user-input');
+  if (!input) return;
+  addBlockedUser(input.value);
+  input.value = '';
+  renderBlockedUsersList();
+  renderFavoritedUsersList();
 }
 
 function timeAgo(utcStr) {
@@ -89,7 +451,7 @@ function timeAgo(utcStr) {
 }
 
 function applyRelativeTimestamps() {
-  if (localStorage.getItem(REL_TS_KEY) === 'false') return;
+  if (localStorage.getItem(REL_TS_KEY) !== 'true') return;
   document.querySelectorAll('[data-utc]').forEach(function(el) {
     var rel = timeAgo(el.dataset.utc);
     if (rel) el.textContent = rel;
@@ -103,15 +465,18 @@ function saveCollapseThreshold() {
   var val = input.value.trim();
   if (val === '') {
     localStorage.removeItem(AUTO_COLLAPSE_KEY);
+    persistSetting(AUTO_COLLAPSE_KEY, null);
     return;
   }
   var num = Number(val);
   if (!Number.isInteger(num)) {
     input.value = '';
     localStorage.removeItem(AUTO_COLLAPSE_KEY);
+    persistSetting(AUTO_COLLAPSE_KEY, null);
     return;
   }
   localStorage.setItem(AUTO_COLLAPSE_KEY, String(num));
+  persistSetting(AUTO_COLLAPSE_KEY, String(num));
 }
 
 function applyAutoCollapse() {
@@ -165,9 +530,20 @@ document.addEventListener('DOMContentLoaded', function() {
   syncTextSizeControl();
   var wideToggle = document.getElementById('wider-width-toggle');
   if (wideToggle) wideToggle.checked = localStorage.getItem(WIDE_KEY) === 'true';
-  applyRelativeTimestamps();
-  applyAutoCollapse();
   markTruncatedFlairs();
+  blockedUsersReady.then(function() {
+    applyBlockedUsers();
+  });
+  favoritedUsersReady.then(function() {
+    applyFavoritedUsers();
+  });
+  savedCommentsReady.then(function() {
+    applySavedComments();
+  });
+  settingsReady.then(function() {
+    applyRelativeTimestamps();
+    applyAutoCollapse();
+  });
 });
 
 // Author summary popup
@@ -186,10 +562,46 @@ function openAuthorSummary(username, event) {
     })
     .then(function(html) {
       panel.innerHTML = html;
+      syncAuthorActionButtons(panel, username);
     })
     .catch(function() {
       panel.innerHTML = '<div class="author-summary-loading">Could not load profile.</div>';
     });
+}
+
+function syncAuthorActionButtons(panel, username) {
+  var blockBtn = panel.querySelector('.author-block-btn');
+  var favoriteBtn = panel.querySelector('.author-favorite-btn');
+  var blocked = isUserBlocked(username);
+  var favorited = isUserFavorited(username);
+  if (blockBtn) {
+    blockBtn.classList.toggle('blocked', blocked);
+    blockBtn.disabled = favorited;
+    blockBtn.setAttribute('aria-label', (blocked ? 'Unblock u/' : 'Block u/') + username);
+  }
+  if (favoriteBtn) {
+    favoriteBtn.classList.toggle('favorited', favorited);
+    favoriteBtn.disabled = blocked;
+    favoriteBtn.setAttribute('aria-label', (favorited ? 'Unfavorite u/' : 'Favorite u/') + username);
+  }
+}
+
+function toggleBlockedUser(username, btn) {
+  if (isUserBlocked(username)) {
+    removeBlockedUser(username);
+  } else {
+    addBlockedUser(username);
+  }
+  syncAuthorActionButtons(btn.closest('.author-summary'), username);
+}
+
+function toggleFavoritedUser(username, btn) {
+  if (isUserFavorited(username)) {
+    removeFavoritedUser(username);
+  } else {
+    addFavoritedUser(username);
+  }
+  syncAuthorActionButtons(btn.closest('.author-summary'), username);
 }
 
 function closeAuthorSummary() {

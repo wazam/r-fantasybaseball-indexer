@@ -7,13 +7,14 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from starlette.templating import Jinja2Templates
 
 from sqlalchemy import func
 
 from app.db import SessionLocal
-from app.models import Comment, Thread
+from app.models import Comment, ListItem, Setting, Thread
 from app.web.markdown_render import highlight_terms, render_markdown
 from app.web.search_query import apply_search_filters, parse_search_query
 
@@ -72,6 +73,90 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+ALLOWED_LISTS = {"blocked_users", "favorited_users", "saved_comments"}
+
+
+class ListItemIn(BaseModel):
+    item: str
+
+
+@router.get("/api/lists/{list_name}")
+def get_list_items(list_name: str, db: Session = Depends(get_db)):
+    if list_name not in ALLOWED_LISTS:
+        raise HTTPException(status_code=404, detail="Unknown list")
+    rows = (
+        db.query(ListItem.item_value)
+        .filter(ListItem.list_name == list_name)
+        .order_by(ListItem.created_at)
+        .all()
+    )
+    return [r[0] for r in rows]
+
+
+@router.post("/api/lists/{list_name}")
+def add_list_item(list_name: str, body: ListItemIn, db: Session = Depends(get_db)):
+    if list_name not in ALLOWED_LISTS:
+        raise HTTPException(status_code=404, detail="Unknown list")
+    item_value = body.item.strip()
+    if not item_value:
+        raise HTTPException(status_code=400, detail="item is required")
+    existing = (
+        db.query(ListItem)
+        .filter(ListItem.list_name == list_name, ListItem.item_value == item_value)
+        .first()
+    )
+    if not existing:
+        db.add(ListItem(list_name=list_name, item_value=item_value))
+        db.commit()
+    return {"status": "ok"}
+
+
+@router.delete("/api/lists/{list_name}/{item_value}")
+def delete_list_item(list_name: str, item_value: str, db: Session = Depends(get_db)):
+    if list_name not in ALLOWED_LISTS:
+        raise HTTPException(status_code=404, detail="Unknown list")
+    db.query(ListItem).filter(
+        ListItem.list_name == list_name, ListItem.item_value == item_value
+    ).delete()
+    db.commit()
+    return {"status": "ok"}
+
+
+ALLOWED_SETTINGS = {"aga_relative_timestamps", "aga_hide_flairs", "aga_auto_collapse"}
+
+
+class SettingIn(BaseModel):
+    value: str
+
+
+@router.get("/api/settings")
+def get_settings(db: Session = Depends(get_db)):
+    rows = db.query(Setting).all()
+    return {row.key: row.value for row in rows}
+
+
+@router.put("/api/settings/{key}")
+def set_setting(key: str, body: SettingIn, db: Session = Depends(get_db)):
+    if key not in ALLOWED_SETTINGS:
+        raise HTTPException(status_code=404, detail="Unknown setting")
+    existing = db.query(Setting).filter(Setting.key == key).first()
+    if existing:
+        existing.value = body.value
+    else:
+        db.add(Setting(key=key, value=body.value))
+    db.commit()
+    return {"status": "ok"}
+
+
+@router.delete("/api/settings/{key}")
+def delete_setting(key: str, db: Session = Depends(get_db)):
+    if key not in ALLOWED_SETTINGS:
+        raise HTTPException(status_code=404, detail="Unknown setting")
+    db.query(Setting).filter(Setting.key == key).delete()
+    db.commit()
+    return {"status": "ok"}
 
 
 def build_comment_tree(comments, sort_by: str = "new"):
@@ -254,6 +339,22 @@ def comment_context(comment_id: str, request: Request, q: str = "", db: Session 
     )
 
 
+@router.get("/saved/comments", response_class=HTMLResponse)
+def saved_comments_partial(request: Request, ids: str = "", db: Session = Depends(get_db)):
+    id_list = [i for i in ids.split(",") if i]
+    items = []
+    if id_list:
+        rows = (
+            db.query(Comment, Thread)
+            .join(Thread, Comment.thread_id == Thread.id)
+            .filter(Comment.id.in_(id_list))
+            .all()
+        )
+        by_id = {c.id: (c, t) for c, t in rows}
+        items = [{"comment": c, "thread": t} for c, t in (by_id[i] for i in id_list if i in by_id)]
+    return templates.TemplateResponse(request, "_saved_comments.html", {"items": items})
+
+
 @router.get("/author/{username}/summary", response_class=HTMLResponse)
 def author_summary(username: str, request: Request, db: Session = Depends(get_db)):
     stats = (
@@ -298,3 +399,8 @@ def author_summary(username: str, request: Request, db: Session = Depends(get_db
 @router.get("/settings", response_class=HTMLResponse)
 def settings_page(request: Request):
     return templates.TemplateResponse(request, "settings.html", {})
+
+
+@router.get("/saved", response_class=HTMLResponse)
+def saved_page(request: Request):
+    return templates.TemplateResponse(request, "saved.html", {})

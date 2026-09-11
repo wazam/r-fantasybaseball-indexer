@@ -9,18 +9,6 @@
 
     <div class="settings-pref">
       <div class="pref-info">
-        <span class="pref-label">Text Size</span>
-        <span class="pref-note">Scales all text and spacing across the app.</span>
-      </div>
-      <div class="segment-control">
-        <button class="segment-btn" data-size="small" onclick="setTextSize('small')">Small</button>
-        <button class="segment-btn" data-size="standard" onclick="setTextSize('standard')">Standard</button>
-        <button class="segment-btn" data-size="large" onclick="setTextSize('large')">Large</button>
-      </div>
-    </div>
-
-    <div class="settings-pref">
-      <div class="pref-info">
         <span class="pref-label">Theme</span>
         <span class="pref-note">Switches between light and dark color schemes. Auto follows your device's system setting.</span>
       </div>
@@ -33,13 +21,14 @@
 
     <div class="settings-pref">
       <div class="pref-info">
-        <span class="pref-label">Relative Dates</span>
-        <span class="pref-note">Shows dates as "3h", "2d", or "1w" for content less than a month old.</span>
+        <span class="pref-label">Text Size</span>
+        <span class="pref-note">Scales all text and spacing across the app.</span>
       </div>
-      <label class="toggle-switch" aria-label="Toggle Relative Dates">
-        <input type="checkbox" id="rel-ts-toggle" onchange="toggleRelativeTimestamps()">
-        <span class="toggle-slider"></span>
-      </label>
+      <div class="segment-control">
+        <button class="segment-btn" data-size="small" onclick="setTextSize('small')">Small</button>
+        <button class="segment-btn" data-size="standard" onclick="setTextSize('standard')">Standard</button>
+        <button class="segment-btn" data-size="large" onclick="setTextSize('large')">Large</button>
+      </div>
     </div>
 
     <div class="settings-pref">
@@ -67,6 +56,33 @@
         <option value="0">All</option>
       </select>
     </div>
+  </div>
+
+  <div class="settings-section">
+    <h2 class="settings-heading">Synced Preferences</h2>
+    <p class="settings-note">Synced across all browsers.</p>
+
+    <div class="settings-pref">
+      <div class="pref-info">
+        <span class="pref-label">Relative Dates</span>
+        <span class="pref-note">Shows dates as "3h", "2d", or "1w" for content less than a month old.</span>
+      </div>
+      <label class="toggle-switch" aria-label="Toggle Relative Dates">
+        <input type="checkbox" id="rel-ts-toggle" onchange="toggleRelativeTimestamps()">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div class="settings-pref">
+      <div class="pref-info">
+        <span class="pref-label">Hide Flairs</span>
+        <span class="pref-note">Hides league/team flairs under each comment, saving space.</span>
+      </div>
+      <label class="toggle-switch" aria-label="Toggle Hide Flairs">
+        <input type="checkbox" id="hide-flairs-toggle" onchange="toggleHideFlairs()">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
 
     <div class="settings-pref">
       <div class="pref-info">
@@ -75,6 +91,36 @@
       </div>
       <input type="number" id="collapse-threshold" class="pref-input" max="0" onblur="saveCollapseThreshold()">
     </div>
+  </div>
+
+  <div class="settings-section">
+    <h2 class="settings-heading">Blocked Users</h2>
+    <p class="settings-note">Hides comments from these authors in search and thread views. Synced across all browsers.</p>
+
+    <div class="blocked-users-quickadd">
+      <button class="quickadd-btn" data-username="AutoModerator" onclick="quickAddBlockedUser('AutoModerator')">+ AutoModerator</button>
+      <button class="quickadd-btn" data-username="RemindMeBot" onclick="quickAddBlockedUser('RemindMeBot')">+ RemindMeBot</button>
+      <button class="quickadd-btn" data-username="None" onclick="quickAddBlockedUser('None')">+ Deleted/Removed comments</button>
+    </div>
+
+    <div class="blocked-users-add">
+      <input type="text" id="blocked-user-input" class="pref-input" placeholder="Add a username…" onkeydown="if(event.key==='Enter'){event.preventDefault();addBlockedUserFromInput();}">
+      <button class="blocked-user-add-btn" onclick="addBlockedUserFromInput()">Add</button>
+    </div>
+
+    <ul class="blocked-users-list" id="blocked-users-list"></ul>
+  </div>
+
+  <div class="settings-section">
+    <h2 class="settings-heading">Favorited Users</h2>
+    <p class="settings-note">Highlights comments from these authors in search and thread views. Synced across all browsers.</p>
+
+    <div class="blocked-users-add">
+      <input type="text" id="favorited-user-input" class="pref-input" placeholder="Add a username…" onkeydown="if(event.key==='Enter'){event.preventDefault();addFavoritedUserFromInput();}">
+      <button class="blocked-user-add-btn" onclick="addFavoritedUserFromInput()">Add</button>
+    </div>
+
+    <ul class="blocked-users-list" id="favorited-users-list"></ul>
   </div>
 
   <div class="settings-section">
@@ -100,19 +146,31 @@
     document.addEventListener('DOMContentLoaded', function() {
       syncThemeControl();
 
-      var relToggle = document.getElementById('rel-ts-toggle');
-      if (relToggle) relToggle.checked = localStorage.getItem('aga_relative_timestamps') !== 'false';
+      settingsReady.then(function() {
+        var relToggle = document.getElementById('rel-ts-toggle');
+        if (relToggle) relToggle.checked = localStorage.getItem('aga_relative_timestamps') === 'true';
 
-      var threshInput = document.getElementById('collapse-threshold');
-      if (threshInput) {
-        var saved = localStorage.getItem('aga_auto_collapse');
-        threshInput.value = saved !== null ? saved : '-1';
-      }
+        var hideFlairsToggle = document.getElementById('hide-flairs-toggle');
+        if (hideFlairsToggle) hideFlairsToggle.checked = localStorage.getItem('aga_hide_flairs') === 'true';
+
+        var threshInput = document.getElementById('collapse-threshold');
+        if (threshInput) {
+          var saved = localStorage.getItem('aga_auto_collapse');
+          threshInput.value = saved !== null ? saved : '-1';
+        }
+      });
 
       var perPageSelect = document.getElementById('per-page-setting');
       if (perPageSelect) {
         perPageSelect.value = localStorage.getItem('aga_per_page') || '100';
       }
+
+      favoritedUsersReady.then(function() {
+        renderFavoritedUsersList();
+      });
+      blockedUsersReady.then(function() {
+        renderBlockedUsersList();
+      });
     });
   </script>
 {% endblock %}

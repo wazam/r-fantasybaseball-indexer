@@ -16,6 +16,7 @@
     var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     if (savedTheme ? savedTheme === 'dark' : prefersDark) document.documentElement.classList.add('dark');
     if (localStorage.getItem('aga_wider_width') === 'true') document.documentElement.classList.add('wide');
+    if (localStorage.getItem('aga_hide_flairs') === 'true') document.documentElement.classList.add('hide-flairs');
     var ts = localStorage.getItem('aga_text_size');
     if (ts === 'small') document.documentElement.classList.add('text-small');
     if (ts === 'large') document.documentElement.classList.add('text-large');
@@ -39,6 +40,11 @@
         </button>
       </form>
       <div class="header-actions">
+        <a href="/saved" class="header-btn icon-btn" aria-label="Saved Comments">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </a>
         <a href="/settings" class="header-btn icon-btn" aria-label="Settings">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"/>

@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+{% block title %}Saved Comments • Anything Goes Archive{% endblock %}
+{% block content %}
+  <h1 class="page-heading">Saved Comments</h1>
+  <div id="saved-comments-container">
+    <p class="no-results">Loading…</p>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var container = document.getElementById('saved-comments-container');
+      savedCommentsReady.then(function(ids) {
+        ids = ids.slice().reverse();
+        if (!ids.length) {
+          container.innerHTML = '<p class="no-results">No saved comments yet.</p>';
+          return;
+        }
+        fetch('/saved/comments?ids=' + encodeURIComponent(ids.join(',')))
+          .then(function(r) { return r.text(); })
+          .then(function(html) {
+            container.innerHTML = html;
+            applyFavoritedUsers();
+            markTruncatedFlairs();
+            settingsReady.then(function() {
+              applyRelativeTimestamps();
+            });
+          })
+          .catch(function() {
+            container.innerHTML = '<p class="no-results">Could not load saved comments.</p>';
+          });
+      });
+    });
+  </script>
+{% endblock %}

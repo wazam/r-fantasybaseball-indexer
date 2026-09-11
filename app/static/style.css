@@ -204,7 +204,8 @@ html.dark a.comment-time { color: #4fbdff; }
 
 .meta-row1-left .meta-sep,
 .meta-row1-left .comment-time,
-.meta-row1-left .comment-score {
+.meta-row1-left .comment-score,
+.meta-row1-left .comment-save-btn {
   flex-shrink: 0;
 }
 
@@ -368,6 +369,20 @@ button.comment-author:hover { text-decoration-style: solid; }
 
 .context-btn:hover { color: #0079d3; }
 
+.comment-save-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #7c7c7c;
+  display: inline-flex;
+  align-items: center;
+}
+
+.comment-save-btn:hover { color: #ff4500; }
+.comment-save-btn.saved { color: #ff4500; }
+.comment-save-btn.saved svg { fill: currentColor; }
+
 .context-btn.loading { opacity: 0.4; pointer-events: none; }
 
 .context-container { margin-top: 0.5rem; }
@@ -390,8 +405,20 @@ button.comment-author:hover { text-decoration-style: solid; }
 
 html.dark .context-btn { color: #818384; }
 html.dark .context-btn:hover { color: #4fbdff; }
+html.dark .comment-save-btn { color: #818384; }
+html.dark .comment-save-btn:hover,
+html.dark .comment-save-btn.saved { color: #ff4500; }
 html.dark .author-summary-reddit-link { color: #818384; }
 html.dark .author-summary-reddit-link:hover { color: #4fbdff; }
+html.dark .author-block-btn { color: #818384; }
+html.dark .author-block-btn:hover:not(:disabled),
+html.dark .author-block-btn.blocked { color: #ff6b5b; }
+html.dark .author-block-btn:disabled { color: #47474d; }
+html.dark .author-favorite-btn { color: #818384; }
+html.dark .author-favorite-btn:hover:not(:disabled),
+html.dark .author-favorite-btn.favorited { color: #f0b400; }
+html.dark .author-favorite-btn:disabled { color: #47474d; }
+html.dark .comment-author.favorited { background: #a37b00; color: #fff; }
 html.dark .context-tree { border-left-color: #ff4500; }
 html.dark .context-comment { border-left-color: #343536; }
 html.dark .context-match { background: rgba(255,69,0,0.08); }
@@ -673,6 +700,75 @@ html.dark .context-match { background: rgba(255,69,0,0.08); }
 
 html.dark .pref-select { background: #272729; border-color: #343536; color: #d7dadc; }
 
+.blocked-users-quickadd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.quickadd-btn {
+  background: #f6f7f8;
+  border: 1px solid #edeff1;
+  border-radius: 4px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: #1a1a1b;
+}
+
+.quickadd-btn:hover:not(:disabled) { border-color: #ff4500; color: #ff4500; }
+.quickadd-btn:disabled { opacity: 0.5; cursor: default; }
+
+.blocked-users-add {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.blocked-users-add .pref-input { width: auto; flex: 1; }
+
+.blocked-user-add-btn {
+  background: #ff4500;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.blocked-users-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.blocked-user-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #f6f7f8;
+  border: 1px solid #edeff1;
+  border-radius: 12px;
+  padding: 0.25rem 0.4rem 0.25rem 0.7rem;
+  font-size: 0.8rem;
+}
+
+.blocked-user-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #7c7c7c;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 0.2rem;
+}
+
+.blocked-user-remove:hover { color: #d93025; }
+
 .pref-toggle, .pref-save-btn {
   padding: 0.3rem 0.8rem;
   background: #edeff1;
@@ -781,6 +877,11 @@ html.wide .main-content { max-width: 100%; }
 html.wide .header-inner { max-width: 100%; }
 html.wide .search-form { max-width: 100%; }
 
+/* === HIDE FLAIRS === */
+html.hide-flairs .meta-row2 { display: none; }
+html.hide-flairs .comment-meta,
+html.hide-flairs .search-result-meta { min-height: 0; }
+
 /* === AUTHOR SUMMARY MODAL === */
 .author-summary-overlay {
   display: none;
@@ -826,6 +927,41 @@ body.modal-open { overflow: hidden; }
 }
 
 .author-summary-reddit-link:hover { color: #0079d3; }
+
+.author-block-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 0.35rem;
+  cursor: pointer;
+  color: #7c7c7c;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: -1px;
+}
+
+.author-block-btn:hover:not(:disabled) { color: #d93025; }
+.author-block-btn.blocked { color: #d93025; }
+.author-block-btn:disabled { color: #dcdcdc; cursor: not-allowed; }
+
+.author-favorite-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 0.35rem;
+  cursor: pointer;
+  color: #7c7c7c;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: -1px;
+}
+
+.author-favorite-btn:hover:not(:disabled) { color: #f0b400; }
+.author-favorite-btn.favorited { color: #f0b400; }
+.author-favorite-btn.favorited svg { fill: currentColor; }
+.author-favorite-btn:disabled { color: #dcdcdc; cursor: not-allowed; }
+
+.comment-author.favorited { background: #ffe066; color: #1a1a1b; border-radius: 2px; padding: 0 0.2rem; }
 
 .author-summary-flair {
   display: block;
@@ -897,6 +1033,14 @@ body.modal-open { overflow: hidden; }
 
 .author-summary-thread { font-size: 0.75rem; color: #7c7c7c; }
 
+.saved-comment-thread-link {
+  display: block;
+  font-size: 0.75rem;
+  color: #7c7c7c;
+  margin: 0.3rem 0;
+}
+.saved-comment-thread-link:hover { color: #0079d3; }
+
 .author-summary-viewall {
   display: block;
   margin-top: 1rem;
@@ -944,7 +1088,9 @@ html.dark .author-stat { background: #272729; }
 html.dark .author-stat-label,
 html.dark .author-summary-subheading,
 html.dark .author-summary-thread,
+html.dark .saved-comment-thread-link,
 html.dark .author-summary-loading { color: #818384; }
+html.dark .saved-comment-thread-link:hover { color: #4fbdff; }
 html.dark .author-summary-comment { border-color: #343536; }
 html.dark .comment-flair { background: #343536; color: #d7dadc; }
 html.dark .filter-label,
@@ -965,6 +1111,11 @@ html.dark .sort-form select,
 html.dark .per-page-form select { background: #272729; border-color: #343536; color: #d7dadc; }
 html.dark .pref-toggle { background: #343536; color: #d7dadc; border-color: #474748; }
 html.dark .pref-input { background: #272729; border-color: #343536; color: #d7dadc; }
+html.dark .quickadd-btn { background: #272729; border-color: #343536; color: #d7dadc; }
+html.dark .quickadd-btn:hover:not(:disabled) { border-color: #ff4500; color: #ff4500; }
+html.dark .blocked-user-chip { background: #272729; border-color: #343536; color: #d7dadc; }
+html.dark .blocked-user-remove { color: #818384; }
+html.dark .blocked-user-remove:hover { color: #ff6b5b; }
 html.dark .settings-add-form input { background: #272729; border-color: #343536; color: #d7dadc; }
 html.dark .settings-pref { border-bottom-color: #343536; }
 html.dark .settings-item { border-bottom-color: #343536; }

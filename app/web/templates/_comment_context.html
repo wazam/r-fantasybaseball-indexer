@@ -8,6 +8,8 @@
         <div class="meta-row1-left">
           <span class="comment-score">{{ a.score }}</span>
           <span class="meta-sep" aria-hidden="true">&middot;</span>
+          <button class="comment-save-btn" data-comment-id="{{ a.id }}" onclick="toggleSavedComment('{{ a.id }}', this)" aria-label="Save comment"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg></button>
+          <span class="meta-sep" aria-hidden="true">&middot;</span>
           {{ author_link(a.author) }}
           <span class="meta-sep" aria-hidden="true">&middot;</span>
           <a class="comment-time" href="{{ a.permalink }}" target="_blank" rel="noopener" data-utc="{{ a.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ a.created_utc | smart_time }}</a>
@@ -29,6 +31,8 @@
         <div class="meta-row1-left">
           <span class="comment-score">{{ comment.score }}</span>
           <span class="meta-sep" aria-hidden="true">&middot;</span>
+          <button class="comment-save-btn" data-comment-id="{{ comment.id }}" onclick="toggleSavedComment('{{ comment.id }}', this)" aria-label="Save comment"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg></button>
+          <span class="meta-sep" aria-hidden="true">&middot;</span>
           {{ author_link(comment.author) }}
           <span class="meta-sep" aria-hidden="true">&middot;</span>
           <a class="comment-time" href="{{ comment.permalink }}" target="_blank" rel="noopener" data-utc="{{ comment.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ comment.created_utc | smart_time }}</a>
@@ -49,6 +53,8 @@
       <div class="meta-row1">
         <div class="meta-row1-left">
           <span class="comment-score">{{ c.score }}</span>
+          <span class="meta-sep" aria-hidden="true">&middot;</span>
+          <button class="comment-save-btn" data-comment-id="{{ c.id }}" onclick="toggleSavedComment('{{ c.id }}', this)" aria-label="Save comment"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg></button>
           <span class="meta-sep" aria-hidden="true">&middot;</span>
           {{ author_link(c.author) }}
           <span class="meta-sep" aria-hidden="true">&middot;</span>

@@ -44,3 +44,17 @@ class Comment(Base):
     last_saved = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
 
     thread = relationship("Thread", back_populates="comments")
+
+class ListItem(Base):
+    __tablename__ = 'list_items'
+
+    list_name = Column(String, primary_key=True)  # e.g. "blocked_users", "favorited_users", "saved_comments"
+    item_value = Column(String, primary_key=True)  # username or comment id, depending on list_name
+
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+
+class Setting(Base):
+    __tablename__ = 'settings'
+
+    key = Column(String, primary_key=True)
+    value = Column(String, nullable=False)
