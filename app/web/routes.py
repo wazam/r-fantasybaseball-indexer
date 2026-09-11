@@ -1,6 +1,8 @@
+import hashlib
 import math
 import os
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
@@ -17,6 +19,18 @@ from app.web.search_query import apply_search_filters, parse_search_query
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/web/templates")
+
+
+def _compute_static_version() -> str:
+    static_dir = Path(__file__).resolve().parent.parent / "static"
+    h = hashlib.md5()
+    for name in ("style.css", "app.js"):
+        h.update((static_dir / name).read_bytes())
+    return h.hexdigest()[:8]
+
+
+static_version = _compute_static_version()
+templates.env.globals["static_version"] = static_version
 
 
 def _get_tz():

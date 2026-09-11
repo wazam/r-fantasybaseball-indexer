@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Anything Goes">
   <meta name="theme-color" content="#ff4500">
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/style.css?v={{ static_version }}">
   <script>
     if (localStorage.getItem('aga_theme') === 'dark') document.documentElement.classList.add('dark');
     if (localStorage.getItem('aga_wider_width') === 'true') document.documentElement.classList.add('wide');
@@ -52,6 +52,6 @@
   <div class="author-summary-overlay" id="author-summary-overlay" onclick="if (event.target === this) closeAuthorSummary()">
     <div class="author-summary-panel" id="author-summary-panel" role="dialog" aria-modal="true"></div>
   </div>
-  <script src="/static/app.js"></script>
+  <script src="/static/app.js?v={{ static_version }}"></script>
 </body>
 </html>

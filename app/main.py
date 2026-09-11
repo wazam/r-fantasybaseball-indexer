@@ -14,7 +14,7 @@ from app.config import get_refresh_minutes
 from app.db import init_db
 from app.threads.backfill import backfill_missing_threads, fetch_missing_threads
 from app.threads.fetch_active import deactivate_old_threads, fetch_active_threads, fetch_new_threads
-from app.web.routes import router
+from app.web.routes import router, static_version
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +86,7 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.include_router(router)
 
 templates = Jinja2Templates(directory="app/web/templates")
+templates.env.globals["static_version"] = static_version
 
 
 @app.get("/health")
