@@ -5,6 +5,7 @@ data/
 docs/
 **/__pycache__
 *.pyc
+*.tar.gz
 .dockerignore
 .env
 .env.example

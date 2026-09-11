@@ -2,6 +2,7 @@ archive/
 data/
 __pycache__/
 *.pyc
+*.tar.gz
 .env
 compose.override.yaml
 r-fantasybaseball-indexer.code-workspace
