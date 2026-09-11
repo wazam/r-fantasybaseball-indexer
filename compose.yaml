@@ -2,10 +2,7 @@ services:
   app:
     image: ghcr.io/wazam/r-fantasybaseball-indexer:latest
     container_name: anything-goes-archive
-    ports:
-      - "9009:9009"
-    volumes:
-      - ./data:/app/data
+    restart: unless-stopped
     environment:
       - REDDIT_CLIENT_ID= # REQUIRED, see README
       - REDDIT_CLIENT_SECRET= # REQUIRED, see README
@@ -15,4 +12,7 @@ services:
       # - TZ=UTC
       # - PUID=1000
       # - PGID=1000
-    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+    ports:
+      - 9009:9009
