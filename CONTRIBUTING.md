@@ -13,7 +13,7 @@ Check [ROADMAP.md](ROADMAP.md) first to see if the feature is already planned or
 1. Fork the repository and create a branch from `main`.
 2. Keep changes focused. One fix or feature per pull request.
 3. Match the existing code style and patterns.
-4. Test your changes locally before submitting.
+4. Test your changes locally before submitting. See [Build from Source](README.md#build-from-source) or [Manual Install](README.md#manual-install-python) in the README for setup.
 5. Open the pull request against `main` with a clear description of what was changed and why.
 
 ## Code Style
@@ -21,3 +21,5 @@ Check [ROADMAP.md](ROADMAP.md) first to see if the feature is already planned or
 - Python: follow the existing structure and naming conventions. Run `pipenv run flake8 .` to check for errors before submitting.
 - Templates: plain HTML and Jinja2, no JavaScript frameworks.
 - CSS: mobile-first, no CSS frameworks.
+
+Pull requests are automatically linted and smoke-tested via GitHub Actions.
