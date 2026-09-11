@@ -466,14 +466,16 @@ html.dark .comment-save-btn { color: #818384; }
 html.dark .comment-save-btn:hover,
 html.dark .comment-save-btn.saved { color: #ff4500; }
 html.dark .author-summary-reddit-link { color: #818384; }
-html.dark .author-summary-reddit-link:hover { color: #4fbdff; }
+html.dark .author-summary-reddit-link:hover { color: #4fbdff; background: rgba(255,255,255,0.08); }
 html.dark .author-block-btn { color: #818384; }
 html.dark .author-block-btn:hover:not(:disabled),
 html.dark .author-block-btn.blocked { color: #ff6b5b; }
+html.dark .author-block-btn:hover:not(:disabled) { background: rgba(255,255,255,0.08); }
 html.dark .author-block-btn:disabled { color: #47474d; }
 html.dark .author-favorite-btn { color: #818384; }
 html.dark .author-favorite-btn:hover:not(:disabled),
 html.dark .author-favorite-btn.favorited { color: #f0b400; }
+html.dark .author-favorite-btn:hover:not(:disabled) { background: rgba(255,255,255,0.08); }
 html.dark .author-favorite-btn:disabled { color: #47474d; }
 html.dark .comment-author.favorited { background: #a37b00; color: #fff; }
 html.dark .context-tree { border-left-color: #ff4500; }
@@ -975,45 +977,40 @@ body.modal-open { overflow: hidden; }
 
 .author-summary-name { font-size: 1.1rem; }
 
-.author-summary-reddit-link {
-  color: #7c7c7c;
-  margin-left: 0.35rem;
-  display: inline-flex;
-  align-items: center;
-  vertical-align: -1px;
-}
-
-.author-summary-reddit-link:hover { color: #0079d3; }
-
-.author-block-btn {
-  background: none;
-  border: none;
-  padding: 0;
-  margin-left: 0.35rem;
-  cursor: pointer;
+.author-summary-reddit-link,
+.author-block-btn,
+.author-favorite-btn {
   color: #7c7c7c;
   display: inline-flex;
   align-items: center;
   vertical-align: -1px;
+  padding: 0.35rem;
+  margin: -0.35rem 0 -0.35rem 0.3rem;
+  border-radius: 4px;
 }
 
-.author-block-btn:hover:not(:disabled) { color: #d93025; }
-.author-block-btn.blocked { color: #d93025; }
-.author-block-btn:disabled { color: #dcdcdc; cursor: not-allowed; }
+.author-summary-reddit-link svg,
+.author-block-btn svg,
+.author-favorite-btn svg {
+  width: 1.1em;
+  height: 1.1em;
+}
 
+.author-block-btn,
 .author-favorite-btn {
   background: none;
   border: none;
-  padding: 0;
-  margin-left: 0.35rem;
+  font: inherit;
   cursor: pointer;
-  color: #7c7c7c;
-  display: inline-flex;
-  align-items: center;
-  vertical-align: -1px;
 }
 
-.author-favorite-btn:hover:not(:disabled) { color: #f0b400; }
+.author-summary-reddit-link:hover { color: #0079d3; background: rgba(0,0,0,0.06); }
+
+.author-block-btn:hover:not(:disabled) { color: #d93025; background: rgba(0,0,0,0.06); }
+.author-block-btn.blocked { color: #d93025; }
+.author-block-btn:disabled { color: #dcdcdc; cursor: not-allowed; }
+
+.author-favorite-btn:hover:not(:disabled) { color: #f0b400; background: rgba(0,0,0,0.06); }
 .author-favorite-btn.favorited { color: #f0b400; }
 .author-favorite-btn.favorited svg { fill: currentColor; }
 .author-favorite-btn:disabled { color: #dcdcdc; cursor: not-allowed; }
