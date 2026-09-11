@@ -400,6 +400,7 @@ function renderBlockedUsersList() {
 
 function renderFavoritedUsersList() {
   renderUserChipList('favorited-users-list', getFavoritedUsers(), removeFavoritedUser, renderFavoritedUsersList);
+  applyFavoritedUsers();
 }
 
 function addFavoritedUserFromInput() {
@@ -464,15 +465,15 @@ function saveCollapseThreshold() {
   if (!input) return;
   var val = input.value.trim();
   if (val === '') {
-    localStorage.removeItem(AUTO_COLLAPSE_KEY);
-    persistSetting(AUTO_COLLAPSE_KEY, null);
+    localStorage.setItem(AUTO_COLLAPSE_KEY, '');
+    persistSetting(AUTO_COLLAPSE_KEY, '');
     return;
   }
   var num = Number(val);
   if (!Number.isInteger(num)) {
     input.value = '';
-    localStorage.removeItem(AUTO_COLLAPSE_KEY);
-    persistSetting(AUTO_COLLAPSE_KEY, null);
+    localStorage.setItem(AUTO_COLLAPSE_KEY, '');
+    persistSetting(AUTO_COLLAPSE_KEY, '');
     return;
   }
   localStorage.setItem(AUTO_COLLAPSE_KEY, String(num));
