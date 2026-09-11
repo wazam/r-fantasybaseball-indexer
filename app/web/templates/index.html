@@ -8,10 +8,11 @@
     <li class="thread-item">
       <a class="thread-title" href="/threads/{{ thread.id }}">{{ thread.title }}</a>
       <div class="thread-meta">
-        <span class="thread-date" data-utc="{{ thread.posted_at.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ thread.posted_at | localdt('%b %-d, %Y') }}</span>
         <span class="thread-comments">{{ "{:,}".format(thread.comment_count) }} comments</span>
-        <span class="thread-score">{{ thread.score }} pts</span>
-        <a class="thread-reddit-link" href="{{ thread.permalink }}" target="_blank" rel="noopener">reddit</a>
+        <span class="meta-sep" aria-hidden="true">&middot;</span>
+        <span class="thread-date" data-utc="{{ thread.posted_at.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ thread.posted_at | localdt('%b %-d, %Y') }}</span>
+        <span class="meta-sep" aria-hidden="true">&middot;</span>
+        <a class="thread-reddit-link" href="{{ thread.permalink }}" target="_blank" rel="noopener">View on Reddit</a>
       </div>
     </li>
     {% endfor %}
