@@ -30,8 +30,9 @@
       </a>
       <form class="search-form" action="/search" method="get">
         <div class="search-input-wrap">
-          <input type="search" name="q" placeholder="Search comments…" value="{{ request.query_params.get('q', '') }}" id="search-input">
+          <input type="search" name="q" placeholder="Search comments…" value="{{ request.query_params.get('q', '') }}" id="search-input" autocomplete="off">
           <kbd class="search-shortcut">/</kbd>
+          <div class="search-suggestions" id="search-suggestions"></div>
         </div>
         <button type="submit" class="icon-btn" aria-label="Search">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

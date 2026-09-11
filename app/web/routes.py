@@ -75,7 +75,7 @@ def get_db():
         db.close()
 
 
-ALLOWED_LISTS = {"blocked_users", "favorited_users", "saved_comments"}
+ALLOWED_LISTS = {"blocked_users", "favorited_users", "saved_comments", "saved_searches"}
 
 
 class ListItemIn(BaseModel):

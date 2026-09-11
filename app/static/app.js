@@ -8,6 +8,7 @@ var HIDE_FLAIRS_KEY = 'aga_hide_flairs';
 var BLOCKED_USERS_KEY = 'aga_blocked_users';
 var FAVORITED_USERS_KEY = 'aga_favorited_users';
 var SAVED_COMMENTS_KEY = 'aga_saved_comments';
+var SAVED_SEARCHES_KEY = 'aga_saved_searches';
 
 // Kicks off as soon as this script runs (before DOMContentLoaded), so the
 // server's blocked-users list is cached into localStorage before anything
@@ -40,6 +41,16 @@ var savedCommentsReady = fetch('/api/lists/saved_comments')
   })
   .catch(function() {
     return getSavedComments();
+  });
+
+var savedSearchesReady = fetch('/api/lists/saved_searches')
+  .then(function(r) { return r.json(); })
+  .then(function(items) {
+    saveSavedSearches(items);
+    return items;
+  })
+  .catch(function() {
+    return getSavedSearches();
   });
 
 var SYNCED_SETTINGS_KEYS = [REL_TS_KEY, HIDE_FLAIRS_KEY, AUTO_COLLAPSE_KEY];
@@ -367,6 +378,121 @@ function applySavedComments() {
   });
 }
 
+// Saved searches
+function getSavedSearches() {
+  try {
+    return JSON.parse(localStorage.getItem(SAVED_SEARCHES_KEY)) || [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveSavedSearches(list) {
+  if (list.length) {
+    localStorage.setItem(SAVED_SEARCHES_KEY, JSON.stringify(list));
+  } else {
+    localStorage.removeItem(SAVED_SEARCHES_KEY);
+  }
+}
+
+function isSearchSaved(query) {
+  return getSavedSearches().indexOf(query) !== -1;
+}
+
+function addSavedSearch(query) {
+  query = query.trim();
+  if (!query || isSearchSaved(query)) return;
+  var list = getSavedSearches();
+  list.push(query);
+  saveSavedSearches(list);
+  fetch('/api/lists/saved_searches', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ item: query }),
+  }).catch(function() {});
+}
+
+function removeSavedSearch(query) {
+  var list = getSavedSearches().filter(function(q) { return q !== query; });
+  saveSavedSearches(list);
+  fetch('/api/lists/saved_searches/' + encodeURIComponent(query), { method: 'DELETE' }).catch(function() {});
+}
+
+function runSavedSearch(query) {
+  var url = new URL(window.location.origin + '/search');
+  url.searchParams.set('q', query);
+  window.location.href = url.toString();
+}
+
+function renderSearchSuggestions() {
+  var input = document.getElementById('search-input');
+  var panel = document.getElementById('search-suggestions');
+  if (!input || !panel) return;
+  var query = input.value.trim();
+  var saved = getSavedSearches();
+  var matches = query
+    ? saved.filter(function(s) { return s.toLowerCase().indexOf(query.toLowerCase()) !== -1; })
+    : saved;
+
+  panel.innerHTML = '';
+  var rowCount = 0;
+
+  if (query && saved.indexOf(query) === -1) {
+    panel.appendChild(buildSearchSuggestionRow(query, true));
+    rowCount++;
+  }
+  matches.forEach(function(s) {
+    panel.appendChild(buildSearchSuggestionRow(s, false));
+    rowCount++;
+  });
+
+  panel.classList.toggle('open', rowCount > 0);
+}
+
+function buildSearchSuggestionRow(query, isCurrent) {
+  var row = document.createElement('div');
+  row.className = 'search-suggestion-row';
+
+  var textBtn = document.createElement('button');
+  textBtn.type = 'button';
+  textBtn.className = 'search-suggestion-text';
+  textBtn.textContent = query;
+  textBtn.onmousedown = function(e) {
+    e.preventDefault();
+    runSavedSearch(query);
+  };
+
+  var iconBtn = document.createElement('button');
+  iconBtn.type = 'button';
+  iconBtn.className = 'search-suggestion-icon';
+  if (isCurrent) {
+    iconBtn.setAttribute('aria-label', 'Save this search');
+    iconBtn.textContent = '+';
+    iconBtn.onmousedown = function(e) {
+      e.preventDefault();
+      addSavedSearch(query);
+      renderSearchSuggestions();
+    };
+  } else {
+    iconBtn.setAttribute('aria-label', 'Remove saved search');
+    iconBtn.textContent = '−';
+    iconBtn.onmousedown = function(e) {
+      e.preventDefault();
+      removeSavedSearch(query);
+      renderSearchSuggestions();
+    };
+  }
+
+  row.appendChild(textBtn);
+  row.appendChild(iconBtn);
+  return row;
+}
+
+function closeSearchSuggestions() {
+  var panel = document.getElementById('search-suggestions');
+  if (panel) panel.classList.remove('open');
+}
+
 function renderUserChipList(containerId, users, removeFn, rerenderFn) {
   var list = document.getElementById(containerId);
   if (!list) return;
@@ -525,6 +651,15 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeSearchSuggestions();
+});
+
+document.addEventListener('click', function(e) {
+  var wrap = document.querySelector('.search-input-wrap');
+  if (wrap && !wrap.contains(e.target)) closeSearchSuggestions();
+});
+
 document.addEventListener('DOMContentLoaded', function() {
   applyPerPageDefault();
   syncThemeControl();
@@ -545,6 +680,15 @@ document.addEventListener('DOMContentLoaded', function() {
     applyRelativeTimestamps();
     applyAutoCollapse();
   });
+  var searchInput = document.getElementById('search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      savedSearchesReady.then(renderSearchSuggestions);
+    });
+    searchInput.addEventListener('focus', function() {
+      savedSearchesReady.then(renderSearchSuggestions);
+    });
+  }
 });
 
 // Author summary popup

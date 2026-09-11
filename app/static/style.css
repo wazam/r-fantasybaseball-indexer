@@ -91,6 +91,63 @@ html.dark a.comment-time { color: #4fbdff; }
 #search-input:focus + .search-shortcut,
 #search-input:not(:placeholder-shown) + .search-shortcut { display: none; }
 
+.search-suggestions {
+  display: none;
+  position: absolute;
+  top: calc(100% + 0.3rem);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #edeff1;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  max-height: 60vh;
+  overflow-y: auto;
+  z-index: 20;
+  color: #1a1a1b;
+}
+
+.search-suggestions.open { display: block; }
+
+.search-suggestion-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.1rem 0.2rem 0.1rem 0.6rem;
+}
+
+.search-suggestion-row + .search-suggestion-row { border-top: 1px solid #edeff1; }
+
+.search-suggestion-text {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+  color: #1a1a1b;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-suggestion-icon {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  line-height: 1;
+  color: #7c7c7c;
+  cursor: pointer;
+}
+
+.search-suggestion-icon:hover { background: #f6f7f8; color: #ff4500; }
+
 .search-form input[type="search"] {
   flex: 1;
   min-width: 3rem;
@@ -1063,6 +1120,11 @@ body.modal-open { overflow: hidden; }
 /* === DARK MODE === */
 html.dark body { background: #1a1a1b; color: #d7dadc; }
 html.dark a { color: #4fbdff; }
+html.dark .search-suggestions { background: #272729; border-color: #343536; color: #d7dadc; }
+html.dark .search-suggestion-row + .search-suggestion-row { border-top-color: #343536; }
+html.dark .search-suggestion-text { color: #d7dadc; }
+html.dark .search-suggestion-icon { color: #818384; }
+html.dark .search-suggestion-icon:hover { background: #343536; color: #ff6a33; }
 html.dark .thread-item,
 html.dark .thread-header,
 html.dark .search-result-item,
