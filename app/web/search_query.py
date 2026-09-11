@@ -16,8 +16,9 @@ _SCORE_OPS = {
 
 _TOKEN_PATTERN = re.compile(
     r'(?P<sign>[+-])?'
-    r'(?:(?P<fieldname>author|flair|score):)?'
-    r'(?:"(?P<quoted>[^"]*)"|(?P<word>[^\s"]+))'
+    r'(?:(?P<fieldname>author|user|flair|score):)?'
+    r'(?:"(?P<quoted>[^"]*)"|(?P<word>[^\s"]+))',
+    re.IGNORECASE,
 )
 
 _SCORE_PATTERN = re.compile(r'^(?P<op>>=|<=|>|<)?(?P<num>-?\d+)$')
@@ -45,8 +46,10 @@ def parse_search_query(q: str) -> ParsedQuery:
 
         sign = m.group("sign")
         fieldname = m.group("fieldname")
+        if fieldname:
+            fieldname = fieldname.lower()
 
-        if fieldname == "author":
+        if fieldname in ("author", "user"):
             parsed.authors.append(value)
         elif fieldname == "flair":
             parsed.flairs.append(value)
