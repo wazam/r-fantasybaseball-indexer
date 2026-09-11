@@ -2,6 +2,7 @@ archive/
 data/
 __pycache__/
 *.pyc
+*.tar
 *.tar.gz
 .env
 compose.override.yaml
