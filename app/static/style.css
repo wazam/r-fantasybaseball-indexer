@@ -396,6 +396,8 @@ button.comment-author:hover { text-decoration-style: solid; }
 
 html.dark .context-btn { color: #818384; }
 html.dark .context-btn:hover { color: #4fbdff; }
+html.dark .author-summary-reddit-link { color: #818384; }
+html.dark .author-summary-reddit-link:hover { color: #4fbdff; }
 html.dark .context-tree { border-left-color: #ff4500; }
 html.dark .context-comment { border-left-color: #343536; }
 html.dark .context-match { background: rgba(255,69,0,0.08); }
@@ -803,6 +805,16 @@ body.modal-open { overflow: hidden; }
 }
 
 .author-summary-name { font-size: 1.1rem; }
+
+.author-summary-reddit-link {
+  color: #7c7c7c;
+  margin-left: 0.35rem;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: -1px;
+}
+
+.author-summary-reddit-link:hover { color: #0079d3; }
 
 .author-summary-flair {
   display: block;

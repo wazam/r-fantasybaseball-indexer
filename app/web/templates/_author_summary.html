@@ -1,7 +1,7 @@
 <div class="author-summary">
   <div class="author-summary-header">
     <div>
-      <h2 class="author-summary-name">u/{{ username }}</h2>
+      <h2 class="author-summary-name">u/{{ username }}<a class="author-summary-reddit-link" href="https://www.reddit.com/user/{{ username | urlencode }}/" target="_blank" rel="noopener" aria-label="View u/{{ username }} on Reddit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a></h2>
       {% if latest_flair %}<span class="comment-flair author-summary-flair">{{ latest_flair | trim }}</span>{% endif %}
     </div>
     <button class="author-summary-close" aria-label="Close" onclick="closeAuthorSummary()">&times;</button>
@@ -32,6 +32,7 @@
     <li class="author-summary-comment">
       <div class="author-summary-comment-meta">
         <span class="comment-score">{{ item.comment.score }}</span>
+        <span class="meta-sep" aria-hidden="true">&middot;</span>
         <a class="comment-time" href="{{ item.comment.permalink }}" target="_blank" rel="noopener" data-utc="{{ item.comment.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ item.comment.created_utc | smart_time }}</a>
         <span class="author-summary-thread">{{ item.thread.title }}</span>
       </div>
