@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% from "_pagination.html" import render as pagination %}
-{% from "_macros.html" import author_icon %}
+{% from "_macros.html" import author_link %}
 {% block title %}{% if q %}Search "{{ q }}"{% else %}All Comments{% endif %} • Anything Goes Archive{% endblock %}
 {% block content %}
   <h1 class="page-heading">
@@ -13,12 +13,23 @@
       {% for item in results %}
       <li class="search-result-item" id="sr-{{ item.comment.id }}">
         <div class="search-result-meta">
-          <button class="collapse-btn" aria-label="Collapse">[&minus;]</button>
-          <span class="comment-author">{{ item.comment.author }}</span>{{ author_icon(item.comment.author) }}
-          {% if item.comment.flair %}<span class="comment-flair">{{ item.comment.flair }}</span>{% endif %}
-          <span class="comment-score">{{ item.comment.score }}</span>
-          <a class="comment-time" href="{{ item.comment.permalink }}" target="_blank" rel="noopener" data-utc="{{ item.comment.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ item.comment.created_utc | localdt('%b %-d, %Y %-I:%M %p') }}</a>
-          <button class="context-btn" onclick="toggleContext('{{ item.comment.id }}', this)">Context</button>
+          <div class="meta-row1">
+            <button class="collapse-btn" aria-label="Collapse">[&minus;]</button>
+            <div class="meta-row1-left">
+              <span class="meta-sep" aria-hidden="true">&middot;</span>
+              <span class="comment-score">{{ item.comment.score }}</span>
+              <span class="meta-sep" aria-hidden="true">&middot;</span>
+              {{ author_link(item.comment.author) }}
+              <span class="meta-sep" aria-hidden="true">&middot;</span>
+              <a class="comment-time" href="{{ item.comment.permalink }}" target="_blank" rel="noopener" data-utc="{{ item.comment.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ item.comment.created_utc | smart_time }}</a>
+            </div>
+            <button class="context-btn" aria-label="View context" onclick="toggleContext('{{ item.comment.id }}', this)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></button>
+          </div>
+          {% if item.comment.flair %}
+          <div class="meta-row2">
+            <span class="comment-flair">{{ item.comment.flair | trim }}</span>
+          </div>
+          {% endif %}
         </div>
         <div class="comment-body">{{ item.comment.body | render_markdown | highlight(highlight_terms) }}</div>
         <div class="context-container" id="ctx-{{ item.comment.id }}" style="display:none"></div>
@@ -44,24 +55,33 @@
       });
     });
 
+    var CONTEXT_ICON_VIEW = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>';
+    var CONTEXT_ICON_HIDE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>';
+
     function toggleContext(commentId, btn) {
       var container = document.getElementById('ctx-' + commentId);
       if (container.style.display !== 'none') {
         container.style.display = 'none';
         container.innerHTML = '';
-        btn.textContent = 'Context';
+        btn.innerHTML = CONTEXT_ICON_VIEW;
+        btn.setAttribute('aria-label', 'View context');
         return;
       }
-      btn.textContent = 'Loading…';
+      btn.classList.add('loading');
       var query = document.querySelector('.search-results') ? document.querySelector('.search-results').dataset.query : '';
       fetch('/comment/' + commentId + '/context' + (query ? '?q=' + encodeURIComponent(query) : ''))
         .then(function(r) { return r.text(); })
         .then(function(html) {
           container.innerHTML = html;
           container.style.display = '';
-          btn.textContent = 'Hide Context';
+          btn.classList.remove('loading');
+          btn.innerHTML = CONTEXT_ICON_HIDE;
+          btn.setAttribute('aria-label', 'Hide context');
         })
-        .catch(function() { btn.textContent = 'Context'; });
+        .catch(function() {
+          btn.classList.remove('loading');
+          btn.innerHTML = CONTEXT_ICON_VIEW;
+        });
     }
   </script>
 {% endblock %}

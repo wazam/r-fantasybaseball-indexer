@@ -64,10 +64,10 @@ function timeAgo(utcStr) {
   var days = Math.floor(diff / 86400000);
   var weeks = Math.floor(days / 7);
   if (days >= 30) return null;
-  if (weeks >= 1) return weeks + 'w ago';
-  if (days >= 1) return days + 'd ago';
-  if (hours >= 1) return hours + 'h ago';
-  if (mins >= 1) return mins + 'm ago';
+  if (weeks >= 1) return weeks + 'w';
+  if (days >= 1) return days + 'd';
+  if (hours >= 1) return hours + 'h';
+  if (mins >= 1) return mins + 'm';
   return 'just now';
 }
 
@@ -183,4 +183,13 @@ function closeAuthorSummary() {
 
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeAuthorSummary();
+});
+
+// Tap-to-expand truncated flair text (only if actually truncated)
+document.addEventListener('click', function(e) {
+  var flair = e.target.closest('.comment-flair');
+  if (!flair) return;
+  var isExpanded = flair.classList.contains('expanded');
+  if (!isExpanded && flair.scrollWidth <= flair.clientWidth + 1) return;
+  flair.classList.toggle('expanded');
 });

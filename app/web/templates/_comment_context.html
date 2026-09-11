@@ -1,13 +1,23 @@
-{% from "_macros.html" import author_icon %}
+{% from "_macros.html" import author_link %}
 <div class="context-tree">
   {% for i in range(ancestors|length) %}
   {% set a = ancestors[i] %}
   <div class="context-comment depth-{{ i }}">
     <div class="comment-meta">
-      <span class="comment-author">{{ a.author }}</span>{{ author_icon(a.author) }}
-      {% if a.flair %}<span class="comment-flair">{{ a.flair }}</span>{% endif %}
-      <span class="comment-score">{{ a.score }}</span>
-      <a class="comment-time" href="{{ a.permalink }}" target="_blank" rel="noopener" data-utc="{{ a.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ a.created_utc | localdt('%b %-d, %-I:%M %p') }}</a>
+      <div class="meta-row1">
+        <div class="meta-row1-left">
+          <span class="comment-score">{{ a.score }}</span>
+          <span class="meta-sep" aria-hidden="true">&middot;</span>
+          {{ author_link(a.author) }}
+          <span class="meta-sep" aria-hidden="true">&middot;</span>
+          <a class="comment-time" href="{{ a.permalink }}" target="_blank" rel="noopener" data-utc="{{ a.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ a.created_utc | smart_time }}</a>
+        </div>
+      </div>
+      {% if a.flair %}
+      <div class="meta-row2">
+        <span class="comment-flair">{{ a.flair | trim }}</span>
+      </div>
+      {% endif %}
     </div>
     <div class="comment-body">{{ a.body | render_markdown | highlight(highlight_terms) }}</div>
   </div>
@@ -15,11 +25,20 @@
 
   <div class="context-comment context-match depth-{{ ancestors|length }}">
     <div class="comment-meta">
-      <span class="context-match-label">matched</span>
-      <span class="comment-author">{{ comment.author }}</span>{{ author_icon(comment.author) }}
-      {% if comment.flair %}<span class="comment-flair">{{ comment.flair }}</span>{% endif %}
-      <span class="comment-score">{{ comment.score }}</span>
-      <a class="comment-time" href="{{ comment.permalink }}" target="_blank" rel="noopener" data-utc="{{ comment.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ comment.created_utc | localdt('%b %-d, %-I:%M %p') }}</a>
+      <div class="meta-row1">
+        <div class="meta-row1-left">
+          <span class="comment-score">{{ comment.score }}</span>
+          <span class="meta-sep" aria-hidden="true">&middot;</span>
+          {{ author_link(comment.author) }}
+          <span class="meta-sep" aria-hidden="true">&middot;</span>
+          <a class="comment-time" href="{{ comment.permalink }}" target="_blank" rel="noopener" data-utc="{{ comment.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ comment.created_utc | smart_time }}</a>
+        </div>
+      </div>
+      {% if comment.flair %}
+      <div class="meta-row2">
+        <span class="comment-flair">{{ comment.flair | trim }}</span>
+      </div>
+      {% endif %}
     </div>
     <div class="comment-body">{{ comment.body | render_markdown | highlight(highlight_terms) }}</div>
   </div>
@@ -27,10 +46,20 @@
   {% for c in children %}
   <div class="context-comment depth-{{ ancestors|length + 1 }}">
     <div class="comment-meta">
-      <span class="comment-author">{{ c.author }}</span>{{ author_icon(c.author) }}
-      {% if c.flair %}<span class="comment-flair">{{ c.flair }}</span>{% endif %}
-      <span class="comment-score">{{ c.score }}</span>
-      <a class="comment-time" href="{{ c.permalink }}" target="_blank" rel="noopener" data-utc="{{ c.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ c.created_utc | localdt('%b %-d, %-I:%M %p') }}</a>
+      <div class="meta-row1">
+        <div class="meta-row1-left">
+          <span class="comment-score">{{ c.score }}</span>
+          <span class="meta-sep" aria-hidden="true">&middot;</span>
+          {{ author_link(c.author) }}
+          <span class="meta-sep" aria-hidden="true">&middot;</span>
+          <a class="comment-time" href="{{ c.permalink }}" target="_blank" rel="noopener" data-utc="{{ c.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ c.created_utc | smart_time }}</a>
+        </div>
+      </div>
+      {% if c.flair %}
+      <div class="meta-row2">
+        <span class="comment-flair">{{ c.flair | trim }}</span>
+      </div>
+      {% endif %}
     </div>
     <div class="comment-body">{{ c.body | render_markdown | highlight(highlight_terms) }}</div>
   </div>

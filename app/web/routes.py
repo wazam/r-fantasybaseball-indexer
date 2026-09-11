@@ -19,15 +19,28 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/web/templates")
 
 
-def _localdt(dt, fmt="%b %-d, %-I:%M %p"):
+def _get_tz():
     try:
-        tz = ZoneInfo(os.getenv("TZ", "UTC"))
+        return ZoneInfo(os.getenv("TZ", "UTC"))
     except ZoneInfoNotFoundError:
-        tz = ZoneInfo("UTC")
-    return dt.replace(tzinfo=UTC).astimezone(tz).strftime(fmt)
+        return ZoneInfo("UTC")
+
+
+def _localdt(dt, fmt="%b %-d, %-I:%M %p"):
+    return dt.replace(tzinfo=UTC).astimezone(_get_tz()).strftime(fmt)
+
+
+def _smart_time(dt):
+    tz = _get_tz()
+    local = dt.replace(tzinfo=UTC).astimezone(tz)
+    time_str = local.strftime("%-I:%M") + local.strftime("%p").lower()
+    if local.year != datetime.now(tz).year:
+        return local.strftime("%b %-d, %y") + " " + time_str
+    return local.strftime("%b %-d") + ", " + time_str
 
 
 templates.env.filters["localdt"] = _localdt
+templates.env.filters["smart_time"] = _smart_time
 templates.env.filters["render_markdown"] = render_markdown
 templates.env.filters["highlight"] = highlight_terms
 
@@ -252,6 +265,7 @@ def author_summary(username: str, request: Request, db: Session = Depends(get_db
         .all()
     )
     recent_comments = [{"comment": c, "thread": t} for c, t in recent]
+    latest_flair = recent_comments[0]["comment"].flair if recent_comments else None
 
     return templates.TemplateResponse(
         request, "_author_summary.html",
@@ -261,6 +275,7 @@ def author_summary(username: str, request: Request, db: Session = Depends(get_db
             "total_score": total_score or 0,
             "first_seen": first_seen,
             "last_seen": last_seen,
+            "latest_flair": latest_flair,
             "recent_comments": recent_comments,
         }
     )

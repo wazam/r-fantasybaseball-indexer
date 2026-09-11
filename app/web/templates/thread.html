@@ -1,14 +1,15 @@
 {% extends "layout.html" %}
 {% from "_pagination.html" import render as pagination %}
-{% from "_macros.html" import author_icon %}
+{% from "_macros.html" import author_link %}
 {% block title %}{{ thread.title }} • Anything Goes Archive{% endblock %}
 {% block content %}
   <div class="thread-header">
     <h1 class="thread-title">{{ thread.title }}</h1>
     <div class="thread-meta">
-      <span>{{ thread.posted_at | localdt('%b %-d, %Y') }}</span>
       <span>{{ "{:,}".format(thread.comment_count) }} comments</span>
-      <span>{{ thread.score }} pts</span>
+      <span class="meta-sep" aria-hidden="true">&middot;</span>
+      <span data-utc="{{ thread.posted_at.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ thread.posted_at | localdt('%b %-d, %Y') }}</span>
+      <span class="meta-sep" aria-hidden="true">&middot;</span>
       <a href="{{ thread.permalink }}" target="_blank" rel="noopener">View on Reddit</a>
     </div>
   </div>
@@ -19,11 +20,22 @@
       {% set c = item.comment %}
       <div class="comment depth-{{ depth }}" data-depth="{{ item.depth }}">
         <div class="comment-meta">
-          <button class="collapse-btn" aria-label="Collapse">[&minus;]</button>
-          <span class="comment-author">{{ c.author }}</span>{{ author_icon(c.author) }}
-          {% if c.flair %}<span class="comment-flair">{{ c.flair }}</span>{% endif %}
-          <span class="comment-score">{{ c.score }}</span>
-          <a class="comment-time" href="{{ c.permalink }}" target="_blank" rel="noopener" data-utc="{{ c.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ c.created_utc | localdt('%b %-d, %-I:%M %p') }}</a>
+          <div class="meta-row1">
+            <button class="collapse-btn" aria-label="Collapse">[&minus;]</button>
+            <div class="meta-row1-left">
+              <span class="meta-sep" aria-hidden="true">&middot;</span>
+              <span class="comment-score">{{ c.score }}</span>
+              <span class="meta-sep" aria-hidden="true">&middot;</span>
+              {{ author_link(c.author) }}
+              <span class="meta-sep" aria-hidden="true">&middot;</span>
+              <a class="comment-time" href="{{ c.permalink }}" target="_blank" rel="noopener" data-utc="{{ c.created_utc.strftime('%Y-%m-%dT%H:%M:%S') }}Z">{{ c.created_utc | smart_time }}</a>
+            </div>
+          </div>
+          {% if c.flair %}
+          <div class="meta-row2">
+            <span class="comment-flair">{{ c.flair | trim }}</span>
+          </div>
+          {% endif %}
         </div>
         <div class="comment-body">{{ c.body | render_markdown }}</div>
       </div>
