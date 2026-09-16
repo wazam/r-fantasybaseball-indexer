@@ -29,6 +29,8 @@ html.dark a.comment-time { color: #4fbdff; }
   padding: 0.5rem 1rem;
 }
 
+html.tall-header .header-inner { padding-top: 33px; }
+
 .site-logo { display: flex; align-items: center; flex-shrink: 0; }
 .site-logo:hover { opacity: 0.85; text-decoration: none; }
 .site-icon { height: 2rem; width: auto; display: block; }

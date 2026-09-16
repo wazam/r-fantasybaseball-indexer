@@ -5,6 +5,7 @@ var AUTO_COLLAPSE_KEY = 'aga_auto_collapse';
 var WIDE_KEY = 'aga_wider_width';
 var TEXT_SIZE_KEY = 'aga_text_size';
 var HIDE_FLAIRS_KEY = 'aga_hide_flairs';
+var TALL_HEADER_KEY = 'aga_tall_header';
 var BLOCKED_USERS_KEY = 'aga_blocked_users';
 var FAVORITED_USERS_KEY = 'aga_favorited_users';
 var SAVED_COMMENTS_KEY = 'aga_saved_comments';
@@ -131,6 +132,14 @@ function toggleWiderWidth() {
   localStorage.setItem(WIDE_KEY, isWide ? 'true' : 'false');
   var toggle = document.getElementById('wider-width-toggle');
   if (toggle) toggle.checked = isWide;
+}
+
+// Tall header: default follows navigator.standalone (installed iOS PWA) unless explicitly set
+function toggleTallHeader() {
+  var isTall = document.documentElement.classList.toggle('tall-header');
+  localStorage.setItem(TALL_HEADER_KEY, isTall ? 'true' : 'false');
+  var toggle = document.getElementById('tall-header-toggle');
+  if (toggle) toggle.checked = isTall;
 }
 
 function persistSetting(key, value) {
@@ -666,6 +675,11 @@ document.addEventListener('DOMContentLoaded', function() {
   syncTextSizeControl();
   var wideToggle = document.getElementById('wider-width-toggle');
   if (wideToggle) wideToggle.checked = localStorage.getItem(WIDE_KEY) === 'true';
+  var tallHeaderToggle = document.getElementById('tall-header-toggle');
+  if (tallHeaderToggle) {
+    var savedTallHeader = localStorage.getItem(TALL_HEADER_KEY);
+    tallHeaderToggle.checked = savedTallHeader ? savedTallHeader === 'true' : window.navigator.standalone === true;
+  }
   markTruncatedFlairs();
   blockedUsersReady.then(function() {
     applyBlockedUsers();

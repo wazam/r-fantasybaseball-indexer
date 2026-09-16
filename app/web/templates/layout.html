@@ -9,6 +9,7 @@
   <link rel="manifest" href="/static/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Anything Goes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="theme-color" content="#ff4500">
   <link rel="stylesheet" href="/static/style.css?v={{ static_version }}">
   <script>
@@ -17,6 +18,8 @@
     if (savedTheme ? savedTheme === 'dark' : prefersDark) document.documentElement.classList.add('dark');
     if (localStorage.getItem('aga_wider_width') === 'true') document.documentElement.classList.add('wide');
     if (localStorage.getItem('aga_hide_flairs') === 'true') document.documentElement.classList.add('hide-flairs');
+    var savedTallHeader = localStorage.getItem('aga_tall_header');
+    if (savedTallHeader ? savedTallHeader === 'true' : window.navigator.standalone === true) document.documentElement.classList.add('tall-header');
     var ts = localStorage.getItem('aga_text_size');
     if (ts === 'small') document.documentElement.classList.add('text-small');
     if (ts === 'large') document.documentElement.classList.add('text-large');

@@ -44,6 +44,17 @@
 
     <div class="settings-pref">
       <div class="pref-info">
+        <span class="pref-label">Taller Header</span>
+        <span class="pref-note">Adds space above the search bar so it isn't covered by iOS's status bar blur effect when installed to your home screen. Enabled automatically when running as an installed app on iOS.</span>
+      </div>
+      <label class="toggle-switch" aria-label="Toggle Taller Header">
+        <input type="checkbox" id="tall-header-toggle" onchange="toggleTallHeader()">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div class="settings-pref">
+      <div class="pref-info">
         <span class="pref-label">Rows per Page</span>
         <span class="pref-note">Number of comments or threads loaded per page.</span>
       </div>
