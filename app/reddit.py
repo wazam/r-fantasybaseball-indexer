@@ -26,7 +26,7 @@ def fetch_and_store_thread(submission_url: str):
                 break  # success
             except TooManyRequests as e:
                 if attempt < retries:
-                    logger.warning(f"429 TooManyRequests — retrying in {delay}s (attempt {attempt}/{retries})...")
+                    logger.warning(f"429 TooManyRequests, retrying in {delay}s (attempt {attempt}/{retries})...")
                     time.sleep(delay)
                 else:
                     logger.error(f"Thread failed after {retries} retries: {submission_url}")

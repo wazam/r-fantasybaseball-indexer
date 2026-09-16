@@ -154,7 +154,7 @@ function persistSetting(key, value) {
   }
 }
 
-// Relative timestamps — default OFF (only on if explicitly set to 'true')
+// Relative timestamps: default OFF (only on if explicitly set to 'true')
 function toggleRelativeTimestamps() {
   var enabled = localStorage.getItem(REL_TS_KEY) === 'true';
   enabled = !enabled;
@@ -169,7 +169,7 @@ function toggleRelativeTimestamps() {
   if (toggle) toggle.checked = enabled;
 }
 
-// Hide flairs — default OFF (only on if explicitly set to 'true')
+// Hide flairs: default OFF (only on if explicitly set to 'true')
 function toggleHideFlairs() {
   var hidden = document.documentElement.classList.toggle('hide-flairs');
   if (hidden) {
@@ -594,7 +594,7 @@ function applyRelativeTimestamps() {
   });
 }
 
-// Auto-collapse — default threshold -1
+// Auto-collapse: default threshold -1
 function saveCollapseThreshold() {
   var input = document.getElementById('collapse-threshold');
   if (!input) return;
