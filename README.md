@@ -27,13 +27,19 @@
 
 ## Features
 
-- **Scheduler**: runs in the same process as the web UI; automatically fetches newly posted threads, refreshes active ones, and marks old threads inactive on a configurable interval
+- **Web UI**: mobile-friendly browser interface for browsing threads and comment trees, with sort, pagination, collapse/expand, and auto-collapse by score
+- **Search**: syntax-aware search across the full archive, supporting exact phrases, required (+) and excluded (-) terms, author/flair filters, and score comparisons, with matched terms highlighted inline
+- **Author Profiles**: tap any username to see their comment count, total score, first/last seen dates, and recent comment history
+- **Block & Favorite Users**: hide unwanted commenters or highlight ones you follow, synced across every browser and device
+- **Saved Comments & Saved Searches**: bookmark comments and save frequent search queries for one-tap access later
+- **Theming & Display Preferences**: light, dark, or auto theme, adjustable text size, and a full-width layout option
+- **Installable Web App**: add to your phone's home screen for an app-like experience
+- **Scheduler**: automatically fetches newly posted threads, refreshes active ones, and marks old threads inactive on a configurable interval
 - **Comment Archiving**: stores full comment trees with upvote scores, league flairs, reply counts, and parent/child relationships for full thread reconstruction
 - **Duplicate Prevention**: tracks Reddit submission and comment IDs to avoid storing duplicates
 - **Change Tracking**: updates edited comment bodies and upvote scores on each refresh; preserves deleted and removed comments in the archive
 - **Rate Limit Handling**: retries automatically when Reddit API rate limits are hit
-- **Backfill**: CLI tool to import threads missed while the scheduler was offline
-- **Web UI**: mobile-friendly browser interface for browsing threads, searching comments, and filtering by date and sort order
+- **Backfill**: import threads missed while the scheduler was offline, either via a CLI tool or automatically on startup with the `BACKFILL_DATE` environment variable
 
 ## Tech Stack
 
@@ -84,10 +90,8 @@ The image is published to [GitHub Container Registry](https://github.com/wazam/r
    services:
      app:
        image: ghcr.io/wazam/r-fantasybaseball-indexer:latest
-       ports:
-         - "9009:9009"
-       volumes:
-         - ./data:/app/data
+       container_name: anything-goes-archive
+       restart: unless-stopped
        environment:
          - REDDIT_CLIENT_ID= # REQUIRED, see README
          - REDDIT_CLIENT_SECRET= # REQUIRED, see README
@@ -97,7 +101,10 @@ The image is published to [GitHub Container Registry](https://github.com/wazam/r
          # - TZ=UTC
          # - PUID=1000
          # - PGID=1000
-       restart: unless-stopped
+       volumes:
+         - ./data:/app/data
+       ports:
+         - 9009:9009
    ```
 
    The web UI and scheduler run together in a single container.
@@ -208,37 +215,45 @@ For running without Docker using a local Python environment.
 
 ## Screenshots
 
-![Thread list page showing archived Anything Goes threads](<docs/screenshot index.png>)
+![Thread list page showing archived Anything Goes threads](<docs/screenshot index.jpg>)
 
-Thread list sorted by date with comment counts, scores, and Reddit links.
+Thread list sorted by date, with comment counts, how recently each thread was active, and a link back to the original Reddit post.
 
-![Thread list on mobile device](<docs/screenshot mobile index.png>)
+![Thread detail page with a nested comment tree](<docs/screenshot thread.jpg>)
 
-Home page on a mobile device.
+Thread detail page with a nested comment tree, sort controls, and a date filter.
 
-![Thread detail page with nested comment tree](<docs/screenshot thread.png>)
+![Search results with a matched term highlighted](<docs/screenshot search.jpg>)
 
-Thread detail page with nested comment tree, sort controls, and date filter.
+Search results for a multi-term query, with matched words highlighted inline.
 
-![Search results with inline parent and child comment context](<docs/screenshot search.png>)
+![Author profile popup showing stats and recent comments](<docs/screenshot user summary.jpg>)
 
-Search page for a player with inline context for parent/child discussion.
+Tapping any username opens their profile: total comments and score, first/last seen dates, and their recent comment history.
 
-![Search results in dark mode with full width layout](<docs/screenshot search dark mode wide.png>)
+![Saved Comments page listing bookmarked comments](<docs/screenshot saved comments.jpg>)
 
-Search results in dark mode with the full width layout enabled.
+Comments bookmarked with the save icon collect here for quick reference later.
 
-![Search page on mobile in dark mode](<docs/screenshot mobile search dark mode.png>)
+![Thread page with full width layout and large text enabled](<docs/screenshot thread full width large text.jpg>)
 
-Search page in dark mode on a mobile device.
+Full width and Large text size, two of several display preferences available in Settings.
 
-![All Comments page browsing the full archive](<docs/screenshot comments.png>)
+![Settings page with browser preferences, synced preferences, blocked and favorited users, and search syntax help](<docs/screenshot settings.jpg>)
 
-All Comments view with no search term, browsing the full comment archive.
+Settings page: device-only display preferences, preferences synced across browsers, Blocked/Favorited Users management, and a Search Syntax reference.
 
-![Settings page with browser preferences](<docs/screenshot settings.png>)
+![Thread detail page in dark mode](<docs/screenshot dark mode.jpg>)
 
-Settings page with browser preferences for display and behavior options.
+Dark mode, available as a manual choice or set to follow your device automatically.
+
+![Thread detail page on a mobile browser](<docs/screenshot mobile thread webbrowser.jpg>)
+
+The mobile layout in a regular browser tab.
+
+![Thread detail page installed as a home screen app on iOS, in dark mode](<docs/screenshot mobile thread pwa dark mode.jpg>)
+
+Installed to the home screen as a PWA for an app-like experience, with an extra-tall header available in Settings to work around iOS's status bar effects.
 
 ## Contributing
 
