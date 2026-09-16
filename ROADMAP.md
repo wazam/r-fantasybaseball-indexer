@@ -1,5 +1,11 @@
 # Roadmap
 
+Tracks two kinds of ideas: planned features actually committed to a future release, and proposed features that are just collected ideas, not yet planned or prioritized.
+
+## Planned Features
+
+Nothing planned right now. All previously planned features have shipped.
+
 ## Proposed Features
 
 Collected ideas for future development. Not actively planned or prioritized.
