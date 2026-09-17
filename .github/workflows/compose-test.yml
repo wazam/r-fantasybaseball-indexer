@@ -29,11 +29,12 @@ jobs:
       - name: Create data directory
         run: mkdir -p data
 
-      - name: Start app service
+      - name: Inject test credentials
         run: |
-          REDDIT_CLIENT_ID=test \
-          REDDIT_CLIENT_SECRET=test \
-          docker compose up -d app
+          sed -i 's/REDDIT_CLIENT_ID=.*/REDDIT_CLIENT_ID=test/; s/REDDIT_CLIENT_SECRET=.*/REDDIT_CLIENT_SECRET=test/' compose.yaml
+
+      - name: Start app service
+        run: docker compose up -d app
 
       - name: Wait for web service
         run: sleep 30
