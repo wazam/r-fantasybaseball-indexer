@@ -33,16 +33,18 @@ this block otherwise:
 
 Work happens on `dev`; `main` only advances at a deliberate release point.
 Merge `dev` into `main`, commit the version bump there, tag, and push both.
-Use this repo's normal commit style (a plain descriptive title, then a prose
-body explaining why, not a semantic-prefix bullet list), and no attribution
-lines.
+Use this repo's normal commit style: a semantically-prefixed title
+(`feat:`/`fix:`/`docs:`/`chore:`/`refactor:`, scoped to what changed in the
+codebase), then a prose body explaining why, and no attribution lines. This
+is a developer-facing artifact; keep it separate from the user-facing
+release notes in step 4, don't copy one into the other.
 
 ```bash
 git checkout main
 git merge dev
 git add app/__init__.py   # plus any Python-version-sync files, if this release touches those too
 git commit -m "$(cat <<'EOF'
-Bump version to X.Y.Z
+chore: bump version to X.Y.Z
 
 <why this release exists, one or two sentences>
 EOF
@@ -74,6 +76,19 @@ assume the rest are fine. Check all three explicitly, every time.
 
 ## 4. Create the GitHub Release
 
+Release notes are written fresh for the user, not copied from commit
+messages: group by user-visible impact, order by significance, and use
+plain language instead of commit-speak.
+
+Read the full commit log back to the previous tag, titles and bodies both,
+not just a truncated `git log --oneline`: a title alone can undersell what
+actually changed (`git log --reverse vPREV..dev` to see every commit in
+order, `git log -1 --format="%B" <hash>` for a specific commit's full
+body). A commit's body can carry a real user-facing change that its title
+doesn't hint at (e.g. a "harden against API errors" commit that also quietly
+removed a broken config option), and a commit merged early in the branch's
+life is just as easy to lose track of as a recent one.
+
 ```bash
 gh release create vX.Y.Z --title "vX.Y.Z" --notes "$(cat <<'EOF'
 **What's New**
@@ -96,7 +111,14 @@ Or without the CLI: create the release at
 - GHCR and Docker Hub show the new tag published
 - GitHub Release page shows it live:
   <https://github.com/wazam/r-fantasybaseball-indexer/releases>
-- No manual README changes needed here: the version, pulls, image size, and
-  latest-release badges are all shields.io endpoints pulling live from
-  GHCR, Docker Hub, and GitHub, so they update on their own once the above
-  are live.
+- No manual README changes needed for the badges: the version, pulls, image
+  size, and latest-release badges are all shields.io endpoints pulling live
+  from GHCR, Docker Hub, and GitHub, so they update on their own once the
+  above are live.
+- If this release changed the UI, double-check README's Features list and
+  Screenshots section are still accurate; unlike the badges, none of that
+  updates itself.
+- The Docker Hub repository description (intro paragraph, Features list,
+  and Run via Docker quickstart, mirrored from README.md) isn't linked to
+  this repo and won't update on its own either. Update it manually to match
+  if any of those sections changed.
