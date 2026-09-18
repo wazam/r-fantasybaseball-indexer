@@ -1,0 +1,13 @@
+services:
+  app:
+    build: .
+    image: r-fantasybaseball-indexer:local
+    environment:
+      - REDDIT_CLIENT_ID
+      - REDDIT_CLIENT_SECRET
+      - THREAD_TTL_HOURS
+      - SCHEDULER_INTERVAL_MINUTES
+      - BACKFILL_DATE
+      - TZ
+      - PUID
+      - PGID

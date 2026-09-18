@@ -132,7 +132,7 @@ The image is published to [GitHub Container Registry](https://github.com/wazam/r
 
 2. **Build and start the stack**
 
-   With `compose.override.yaml` present, `docker compose build` uses the local source instead of pulling the registry image.
+   With `compose.override.yaml` present, `docker compose build` uses the local source instead of pulling the registry image, tagged `r-fantasybaseball-indexer:local` so it never collides with the published `ghcr.io/wazam/r-fantasybaseball-indexer:latest` tag.
 
    ```sh
    docker compose build
@@ -142,7 +142,7 @@ The image is published to [GitHub Container Registry](https://github.com/wazam/r
    Or build the image manually and use it directly:
 
    ```sh
-   docker build -t ghcr.io/wazam/r-fantasybaseball-indexer:latest .
+   docker build -t r-fantasybaseball-indexer:local .
    docker compose up -d
    ```
 

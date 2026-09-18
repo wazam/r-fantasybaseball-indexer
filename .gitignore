@@ -5,6 +5,5 @@ __pycache__/
 *.tar
 *.tar.gz
 .env
-compose.override.yaml
 r-fantasybaseball-indexer.code-workspace
 TODO.md
