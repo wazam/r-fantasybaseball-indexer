@@ -13,14 +13,14 @@
 ## Table of Contents
 
 - [Features](#features)
-- [Tech Stack](#tech-stack)
+- [Screenshots](#screenshots)
 - [Set Up Reddit API Access](#set-up-reddit-api-access)
 - [Quick Start](#quick-start)
   - [Run via Docker](#run-via-docker)
   - [Build from Source](#build-from-source)
   - [Manual Install (Python)](#manual-install-python)
 - [Environment Variables](#environment-variables)
-- [Screenshots](#screenshots)
+- [Tech Stack](#tech-stack)
 - [Contributing](#contributing)
 - [Disclaimers](#disclaimers)
 - [License](#license)
@@ -41,14 +41,47 @@
 - **Rate Limit Handling**: retries automatically when Reddit API rate limits are hit
 - **Backfill**: import threads missed while the scheduler was offline, either via a CLI tool or automatically on startup with the `BACKFILL_DATE` environment variable
 
-## Tech Stack
+## Screenshots
 
-- **Language:** Python 3.13, managed with Pipenv
-- **Web Framework:** FastAPI with Jinja2 templating and uvicorn
-- **Database:** SQLite via SQLAlchemy ORM
-- **Reddit API:** PRAW
-- **Scheduler:** APScheduler
-- **Deployment:** Docker with Docker Compose
+<img src="docs/screenshot index.jpg" width="480" alt="Thread list page showing archived Anything Goes threads">
+
+Thread list sorted by date, with comment counts, how recently each thread was active, and a link back to the original Reddit post.
+
+<img src="docs/screenshot thread.jpg" width="480" alt="Thread detail page with a nested comment tree">
+
+Thread detail page with a nested comment tree, sort controls, and a date filter.
+
+<img src="docs/screenshot search.jpg" width="480" alt="Search results with a matched term highlighted">
+
+Search results for a multi-term query, with matched words highlighted inline.
+
+<img src="docs/screenshot user summary.jpg" width="480" alt="Author profile popup showing stats and recent comments">
+
+Tapping any username opens their profile: total comments and score, first/last seen dates, and their recent comment history.
+
+<img src="docs/screenshot saved comments.jpg" width="480" alt="Saved Comments page listing bookmarked comments">
+
+Comments bookmarked with the save icon collect here for quick reference later.
+
+<img src="docs/screenshot thread full width large text.jpg" width="480" alt="Thread page with full width layout and large text enabled">
+
+Full width and Large text size, two of several display preferences available in Settings.
+
+<img src="docs/screenshot settings.jpg" width="480" alt="Settings page with browser preferences, synced preferences, blocked and favorited users, and search syntax help">
+
+Settings page: device-only display preferences, preferences synced across browsers, Blocked/Favorited Users management, and a Search Syntax reference.
+
+<img src="docs/screenshot dark mode.jpg" width="480" alt="Thread detail page in dark mode">
+
+Dark mode, available as a manual choice or set to follow your device automatically.
+
+<img src="docs/screenshot mobile thread webbrowser.jpg" width="320" alt="Thread detail page on a mobile browser">
+
+The mobile layout in a regular browser tab.
+
+<img src="docs/screenshot mobile thread pwa dark mode.jpg" width="320" alt="Thread detail page installed as a home screen app on iOS, in dark mode">
+
+Installed to the home screen as a PWA for an app-like experience, with an extra-tall header available in Settings to work around iOS's status bar effects.
 
 ## Set Up Reddit API Access
 
@@ -106,8 +139,6 @@ The image is published to [GitHub Container Registry](https://github.com/wazam/r
        ports:
          - 9009:9009
    ```
-
-   The web UI and scheduler run together in a single container.
 
 3. **Start the stack**
 
@@ -195,8 +226,8 @@ For running without Docker using a local Python environment.
 
    The web UI and scheduler run together in the same process. Then open [http://localhost:9009](http://localhost:9009) in your browser.
 
-> [!TIP]
-> The `--host 0.0.0.0` flag is required to reach the UI from other devices on your local network. Omit it for localhost-only access.
+> [!NOTE]
+> `--host 0.0.0.0` only matters here, for the manual install. The Docker image always binds this way internally. Omit the flag for localhost-only access, or keep it to reach the UI from other devices on your local network.
 
 ---
 
@@ -213,47 +244,14 @@ For running without Docker using a local Python environment.
 | `PUID` | User ID the container runs as. Set this to match the owner of your `./data` directory if it isn't the default. | No | `1000` |
 | `PGID` | Group ID the container runs as. Set this to match the group that owns your `./data` directory if it isn't the default. | No | `1000` |
 
-## Screenshots
+## Tech Stack
 
-![Thread list page showing archived Anything Goes threads](<docs/screenshot index.jpg>)
-
-Thread list sorted by date, with comment counts, how recently each thread was active, and a link back to the original Reddit post.
-
-![Thread detail page with a nested comment tree](<docs/screenshot thread.jpg>)
-
-Thread detail page with a nested comment tree, sort controls, and a date filter.
-
-![Search results with a matched term highlighted](<docs/screenshot search.jpg>)
-
-Search results for a multi-term query, with matched words highlighted inline.
-
-![Author profile popup showing stats and recent comments](<docs/screenshot user summary.jpg>)
-
-Tapping any username opens their profile: total comments and score, first/last seen dates, and their recent comment history.
-
-![Saved Comments page listing bookmarked comments](<docs/screenshot saved comments.jpg>)
-
-Comments bookmarked with the save icon collect here for quick reference later.
-
-![Thread page with full width layout and large text enabled](<docs/screenshot thread full width large text.jpg>)
-
-Full width and Large text size, two of several display preferences available in Settings.
-
-![Settings page with browser preferences, synced preferences, blocked and favorited users, and search syntax help](<docs/screenshot settings.jpg>)
-
-Settings page: device-only display preferences, preferences synced across browsers, Blocked/Favorited Users management, and a Search Syntax reference.
-
-![Thread detail page in dark mode](<docs/screenshot dark mode.jpg>)
-
-Dark mode, available as a manual choice or set to follow your device automatically.
-
-![Thread detail page on a mobile browser](<docs/screenshot mobile thread webbrowser.jpg>)
-
-The mobile layout in a regular browser tab.
-
-![Thread detail page installed as a home screen app on iOS, in dark mode](<docs/screenshot mobile thread pwa dark mode.jpg>)
-
-Installed to the home screen as a PWA for an app-like experience, with an extra-tall header available in Settings to work around iOS's status bar effects.
+- **Language:** Python 3.13, managed with Pipenv
+- **Web Framework:** FastAPI with Jinja2 templating and uvicorn
+- **Database:** SQLite via SQLAlchemy ORM
+- **Reddit API:** PRAW
+- **Scheduler:** APScheduler
+- **Deployment:** Docker with Docker Compose
 
 ## Contributing
 
