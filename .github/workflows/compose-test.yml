@@ -24,7 +24,7 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       - name: Build image
-        run: docker build --load -t ghcr.io/wazam/r-fantasybaseball-indexer:latest -t r-fantasybaseball-indexer:local .
+        run: docker build --load -t ghcr.io/wazam/r-fantasybaseball-indexer:latest .
 
       - name: Create data directory
         run: mkdir -p data
@@ -34,7 +34,7 @@ jobs:
           sed -i 's/REDDIT_CLIENT_ID=.*/REDDIT_CLIENT_ID=test/; s/REDDIT_CLIENT_SECRET=.*/REDDIT_CLIENT_SECRET=test/' compose.yaml
 
       - name: Start app service
-        run: docker compose up -d app
+        run: docker compose -f compose.yaml up -d app
 
       - name: Wait for web service
         run: sleep 30
@@ -44,8 +44,8 @@ jobs:
 
       - name: Dump container logs on failure
         if: failure()
-        run: docker compose logs
+        run: docker compose -f compose.yaml logs
 
       - name: Teardown
         if: always()
-        run: docker compose down --volumes --remove-orphans
+        run: docker compose -f compose.yaml down --volumes --remove-orphans
