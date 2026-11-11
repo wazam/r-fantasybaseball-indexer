@@ -20,4 +20,4 @@ nh3 = "*"
 flake8 = "*"
 
 [requires]
-python_version = "3.13"
+python_version = "3.14"
