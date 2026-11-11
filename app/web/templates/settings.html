@@ -142,9 +142,10 @@
       <li><code>"exact phrase"</code>: matches the exact phrase.</li>
       <li><code>+word</code>: comment must contain this word.</li>
       <li><code>-word</code>: comment must not contain this word.</li>
-      <li><code>author:name</code> or <code>user:name</code>: filter by comment author.</li>
-      <li><code>flair:text</code>: filter by flair text.</li>
-      <li><code>score:&gt;10</code>, <code>score:&lt;5</code>, <code>score:&gt;=10</code>, <code>score:&lt;=5</code>, <code>score:=3</code>: filter by score.</li>
+      <li><code>author:name</code> or <code>user:name</code>: comments by an author whose name contains this text. Repeat it to match any of several authors.</li>
+      <li><code>flair:text</code>: comments whose flair contains this text. Repeat it to match any of several flairs.</li>
+      <li><code>-author:name</code>, <code>-flair:text</code>: leave out comments by these authors or with these flairs.</li>
+      <li><code>score:&gt;10</code>, <code>score:&lt;5</code>, <code>score:&gt;=10</code>, <code>score:&lt;=5</code>, <code>score:=3</code>: filter by score. Use two for a range, like <code>score:&gt;=10 score:&lt;=50</code>, and <code>-score:</code> to leave a score out.</li>
     </ul>
   </div>
 
