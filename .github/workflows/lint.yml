@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v6
@@ -35,8 +35,8 @@ jobs:
           python -m pip install --upgrade pip pipenv
           pipenv install --dev --deploy --ignore-pipfile
 
-      - name: Lint (critical errors only)
-        run: pipenv run flake8 . --select=E9,F63,F7,F82
+      - name: Lint (syntax errors, undefined names and likely bugs)
+        run: pipenv run flake8 . --select=E9,F63,F7,F82,F50,F52,F601,F602,F811,F901,W605
 
       - name: Lint (full style report)
         run: pipenv run flake8 . --exit-zero

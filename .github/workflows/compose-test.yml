@@ -10,42 +10,70 @@ on:
   schedule:
     - cron: '22 22 * * 3'
   workflow_dispatch:
+  workflow_run:                      # test what Docker Publish just published
+    workflows: [Docker Publish]
+    types: [completed]
+
+permissions:
+  contents: read
 
 jobs:
   test:
-    name: Validate Stack with Docker Compose
-    runs-on: ubuntu-latest
+    name: Validate Stack with Docker Compose (${{ matrix.source }} on ${{ matrix.runner }})
+    # after a publish, only test if the publish succeeded
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    strategy:
+      fail-fast: false
+      matrix:
+        # source build: amd64 only. Published images: both registries, both platforms
+        runner: ${{ fromJSON(github.event_name == 'workflow_run' && '["ubuntu-latest","ubuntu-24.04-arm"]' || '["ubuntu-latest"]') }}
+        source: ${{ fromJSON(github.event_name == 'workflow_run' && '["ghcr.io/wazam/r-fantasybaseball-indexer","wazam123/r-fantasybaseball-indexer"]' || '["build"]') }}
+    runs-on: ${{ matrix.runner }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
+        with:
+          # after a publish, test with the compose.yaml from the released commit
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Build image
-        run: docker build --load -t ghcr.io/wazam/r-fantasybaseball-indexer:latest .
+      - name: Get the image
+        env:
+          SOURCE: ${{ matrix.source }}
+          TAG: ${{ github.event.workflow_run.head_branch }}   # the tag that triggered Docker Publish, e.g. v0.4.0
+        run: |
+          if [ "$SOURCE" = build ]; then
+            docker build -t ghcr.io/wazam/r-fantasybaseball-indexer:latest .
+          else
+            [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "expected a vX.Y.Z tag, got '$TAG'"; exit 1; }
+            docker pull "$SOURCE:${TAG#v}"
+            # compose.yaml runs ghcr.io/...:latest, so give the pulled image that name
+            docker tag "$SOURCE:${TAG#v}" ghcr.io/wazam/r-fantasybaseball-indexer:latest
+          fi
 
       - name: Create data directory
-        run: mkdir -p data
+        # GitHub runners are uid 1001; the container runs as 1000
+        run: mkdir -p data && sudo chown 1000:1000 data
 
-      - name: Inject test credentials
-        run: |
-          sed -i 's/REDDIT_CLIENT_ID=.*/REDDIT_CLIENT_ID=test/; s/REDDIT_CLIENT_SECRET=.*/REDDIT_CLIENT_SECRET=test/' compose.yaml
-
-      - name: Start app service
-        run: docker compose -f compose.yaml up -d app
-
-      - name: Wait for web service
-        run: sleep 30
+      - name: Start the stack
+        env:
+          REDDIT_CLIENT_ID: test
+          REDDIT_CLIENT_SECRET: test
+        run: docker compose -f compose.yaml up -d --wait --wait-timeout 120
 
       - name: Verify web UI is responding
-        run: curl --retry 10 --retry-connrefused --retry-max-time 120 --fail http://localhost:9009/
+        run: curl --retry 10 --retry-connrefused --retry-max-time 60 --fail http://127.0.0.1:9009/
 
       - name: Dump container logs on failure
         if: failure()
+        env:
+          REDDIT_CLIENT_ID: test
+          REDDIT_CLIENT_SECRET: test
         run: docker compose -f compose.yaml logs
 
       - name: Teardown
         if: always()
+        env:
+          REDDIT_CLIENT_ID: test
+          REDDIT_CLIENT_SECRET: test
         run: docker compose -f compose.yaml down --volumes --remove-orphans
