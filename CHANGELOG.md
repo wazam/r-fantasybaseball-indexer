@@ -13,6 +13,7 @@ Release notes for every version, newest first. Each version is tagged in git and
 
 ### What's New
 
+- New optional `FORWARDED_ALLOW_IPS` setting for running behind a reverse proxy. Set it to your proxy's IP so logs show real client IPs instead of the proxy's, and redirects (like `/settings/` to `/settings`) keep `https://` instead of dropping to `http://`.
 - Runs on Python 3.14, up from 3.13, with every dependency updated to its latest release.
 - The image's labels are accurate: title `Anything Goes Archive` and the project's own description instead of the repository name and its GitHub About text, plus the base image's name. GHCR's package page shows the description. Local builds leave out the build date, commit, and version instead of setting them to `unknown`.
 

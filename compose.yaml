@@ -22,6 +22,7 @@ services:
       - SCHEDULER_INTERVAL_MINUTES=${SCHEDULER_INTERVAL_MINUTES:-60}
       - BACKFILL_DATE=${BACKFILL_DATE:-}
       - TZ=${TZ:-UTC}
+      - FORWARDED_ALLOW_IPS=${FORWARDED_ALLOW_IPS:-127.0.0.1,::1}
     volumes:
       - ./data:/app/data
     ports:

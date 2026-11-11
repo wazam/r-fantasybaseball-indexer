@@ -98,6 +98,7 @@ services:
       - SCHEDULER_INTERVAL_MINUTES=${SCHEDULER_INTERVAL_MINUTES:-60}
       - BACKFILL_DATE=${BACKFILL_DATE:-}
       - TZ=${TZ:-UTC}
+      - FORWARDED_ALLOW_IPS=${FORWARDED_ALLOW_IPS:-127.0.0.1,::1}
     volumes:
       - ./data:/app/data
     ports:
@@ -204,6 +205,7 @@ For running without Docker using a local Python environment.
    ```
 
    The web UI and scheduler run together in the same process. Then open [http://localhost:9009](http://localhost:9009) in your browser.
+   `--env-file .env` loads `.env` before uvicorn starts, which `FORWARDED_ALLOW_IPS` needs.
 
 > [!NOTE]
 > `--host 0.0.0.0` only matters here, for the manual install. The Docker image always binds this way internally. Omit the flag for localhost-only access, or keep it to reach the UI from other devices on your local network.
@@ -222,6 +224,7 @@ Set these in `.env`: next to `compose.yaml` for Docker, or in the repo folder fo
 | `BACKFILL_DATE` | Backfill missing threads on container startup before the scheduler begins. Set to a `YYYY-MM-DD` cutoff date. Leave unset to skip. | No | |
 | `SCHEDULER_INTERVAL_MINUTES` | How often the scheduler runs. Each thread with 1,000 to 3,000 comments takes roughly 2 to 3 minutes to fetch, so values below 15 are not practical. | No | `60` |
 | `TZ` | Timezone for displaying dates and times in the web UI. Accepts any [tz database identifier](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List). | No | `UTC` |
+| `FORWARDED_ALLOW_IPS` | Reverse proxy IPs to trust for `X-Forwarded-For` and `X-Forwarded-Proto` headers, comma-separated (CIDR ranges allowed). Set this to your proxy's IP when running behind a reverse proxy, so logs show real client IPs and redirects keep `https://`. Use `*` only if nothing but the proxy can reach port 9009. | No | `127.0.0.1,::1` |
 
 ## Your Data
 
