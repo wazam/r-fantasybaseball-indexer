@@ -104,14 +104,14 @@ awk '/^## \[vX.Y.Z\]/{f=1;next} /^## /{f=0} f' CHANGELOG.md \
 ## 8. Check the published image
 
 ```bash
-docker buildx imagetools inspect ghcr.io/wazam/r-fantasybaseball-indexer:X.Y.Z   # both platforms present
+docker buildx imagetools inspect ghcr.io/wazam/r-fantasybaseball-indexer:X.Y.Z   # linux/amd64 and linux/arm64, nothing else
 for image in ghcr.io/wazam/r-fantasybaseball-indexer:X.Y.Z wazam123/r-fantasybaseball-indexer:X.Y.Z; do
   gh attestation verify oci://$image --repo wazam/r-fantasybaseball-indexer \
     --signer-workflow wazam/r-fantasybaseball-indexer/.github/workflows/docker.yml --source-ref refs/tags/vX.Y.Z
 done
 ```
 
-The attestations live in GitHub's attestation store, not in the registries, so nothing besides the image lands in GHCR, and its package page shows the image. Up to v0.4.0, `docker.yml` signed with cosign instead, and the signature, pushed last as a tag in the image's package, was what the package page showed. Those releases still verify with `cosign verify ghcr.io/wazam/r-fantasybaseball-indexer:X.Y.Z --certificate-identity "https://github.com/wazam/r-fantasybaseball-indexer/.github/workflows/docker.yml@refs/tags/vX.Y.Z" --certificate-oidc-issuer https://token.actions.githubusercontent.com`, through `docker run --rm ghcr.io/sigstore/cosign/cosign:v2.N.P verify ...` where cosign isn't installed.
+`docker.yml` attests each pushed image with `actions/attest` (since v0.4.1). The attestations live in GitHub's attestation store, not in the registries, and both build steps set `provenance: false` (since v0.4.2), so buildx adds no unsigned provenance manifests (`unknown/unknown`) to the index. Each release therefore adds only its image to GHCR, and the package page's header shows it. Up to v0.4.0, `docker.yml` signed with cosign instead: the signature, pushed last as a `sha256-<digest>.sig` tag in the image's package, became the version the page showed. Those signatures were deleted from the package on 2026-11-11, so v0.4.0 and older can't be checked with `cosign verify` (their entries in Sigstore's transparency log remain).
 
 Then the labels and GHCR's description annotation, in both registries. Each platform should show the same 12 labels: the Dockerfile's 9 (title, description, url, source, documentation, licenses, authors, vendor, base.name), plus `created`, `revision` equal to `git rev-parse vX.Y.Z^{commit}`, and `version` `X.Y.Z`. The index should hold the description:
 
@@ -123,6 +123,18 @@ done
 ```
 
 Then open `https://github.com/wazam/r-fantasybaseball-indexer/pkgs/container/r-fantasybaseball-indexer` and check that its header shows the `X.Y.Z` image, not a `sha256-...sig` tag, with the description and a `docker pull` command for the image.
+
+### GHCR package versions
+
+GHCR lists every manifest as a version. A release adds three: its tagged index and, untagged, the amd64 and arm64 images the index points to. v0.4.1 and older also have two untagged `unknown/unknown` provenance manifests each. Never delete an untagged version that a tagged index lists: pulls of that release, or tools that read the whole index, break. To see what each version is:
+
+```bash
+gh api --paginate '/users/wazam/packages/container/r-fantasybaseball-indexer/versions?per_page=100' \
+  --jq '.[] | "\(.id) \(.name) \(.metadata.container.tags|join(","))"'
+docker buildx imagetools inspect --raw ghcr.io/wazam/r-fantasybaseball-indexer:X.Y.Z   # the digests the index lists
+```
+
+Listing needs a token with `read:packages` and deleting one with `delete:packages` (`gh auth refresh -h github.com -s read:packages,delete:packages`, then `-r` to drop them). GitHub can restore a deleted version for 30 days.
 
 ## 9. Update Docker Hub and GitHub About
 

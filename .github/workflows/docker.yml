@@ -63,6 +63,9 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
+          # The GitHub attestation below records the build. buildx's own unsigned provenance would add
+          # an unknown/unknown manifest per platform to the image index
+          provenance: false
           tags: ${{ steps.meta.outputs.tags }}
           # Only the labels that change per build: metadata-action's full set would replace the Dockerfile's
           # title and description with the repo name and its GitHub About text
@@ -132,6 +135,9 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
+          # The GitHub attestation below records the build. buildx's own unsigned provenance would add
+          # an unknown/unknown manifest per platform to the image index
+          provenance: false
           tags: ${{ steps.meta.outputs.tags }}
           # Only the labels that change per build: metadata-action's full set would replace the Dockerfile's
           # title and description with the repo name and its GitHub About text

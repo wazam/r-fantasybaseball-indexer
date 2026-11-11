@@ -2,6 +2,12 @@
 
 Release notes for every version, newest first. Each version is tagged in git and has a matching [release on GitHub](https://github.com/wazam/r-fantasybaseball-indexer/releases). Changes that haven't been released yet collect under **Unreleased**, and [RELEASING.md](RELEASING.md) covers how to ship them.
 
+## Unreleased
+
+### What's New
+
+- The image index lists only the amd64 and arm64 images. buildx's unsigned build provenance manifests (`unknown/unknown` entries in the index, and untagged versions on GHCR's package) are no longer added, since the GitHub attestation added in v0.4.1 records the same build and is signed.
+
 ## [v0.4.1](https://github.com/wazam/r-fantasybaseball-indexer/releases/tag/v0.4.1) (2026-11-11)
 
 ### What's New
