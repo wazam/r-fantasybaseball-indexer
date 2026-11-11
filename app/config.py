@@ -17,13 +17,13 @@ def get_reddit_client():
     if not client_id or not client_secret:
         raise RuntimeError("[ERROR] Missing Reddit API credentials. Please set REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET in your .env file.")
 
+    default_user_agent = f"linux:r-fantasybaseball-indexer:v{__version__} (by /u/{__author__})"
+
     return praw.Reddit(
         client_id=client_id,
         client_secret=client_secret,
-        user_agent=os.getenv(
-            "REDDIT_USER_AGENT",
-            f"linux:r-fantasybaseball-indexer:v{__version__} (by /u/{__author__})"
-        )
+        # compose.yaml passes an empty string when REDDIT_USER_AGENT is unset
+        user_agent=os.getenv("REDDIT_USER_AGENT") or default_user_agent,
     )
 
 
@@ -42,4 +42,4 @@ def get_refresh_minutes():
 
 
 def get_database_url():
-    return os.getenv("DATABASE_URL", "sqlite:///./data/data.db")
+    return "sqlite:///./data/data.db"

@@ -94,6 +94,7 @@ services:
     environment:
       - REDDIT_CLIENT_ID=${REDDIT_CLIENT_ID:?set it in .env}
       - REDDIT_CLIENT_SECRET=${REDDIT_CLIENT_SECRET:?set it in .env}
+      - REDDIT_USER_AGENT=${REDDIT_USER_AGENT:-}
       - THREAD_TTL_HOURS=${THREAD_TTL_HOURS:-24}
       - SCHEDULER_INTERVAL_MINUTES=${SCHEDULER_INTERVAL_MINUTES:-60}
       - BACKFILL_DATE=${BACKFILL_DATE:-}
@@ -220,6 +221,7 @@ Set these in `.env`: next to `compose.yaml` for Docker, or in the repo folder fo
 | --- | --- | --- | --- |
 | `REDDIT_CLIENT_ID` | Reddit app client ID. | Yes | |
 | `REDDIT_CLIENT_SECRET` | Reddit app client secret. | Yes | |
+| `REDDIT_USER_AGENT` | User agent sent to Reddit's API. Reddit asks each app to identify itself with its own username, in the form `platform:app:version (by /u/your_username)`. Leave unset to use the built-in one, which names this project's author. | No | |
 | `THREAD_TTL_HOURS` | Hours a thread stays active and continues to be refreshed before being archived. | No | `24` |
 | `BACKFILL_DATE` | Backfill missing threads on container startup before the scheduler begins. Set to a `YYYY-MM-DD` cutoff date. Leave unset to skip. | No | |
 | `SCHEDULER_INTERVAL_MINUTES` | How often the scheduler runs. Each thread with 1,000 to 3,000 comments takes roughly 2 to 3 minutes to fetch, so values below 15 are not practical. | No | `60` |

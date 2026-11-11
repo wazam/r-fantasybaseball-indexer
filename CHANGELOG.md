@@ -10,10 +10,12 @@ Release notes for every version, newest first. Each version is tagged in git and
 - `compose.yaml` now reads every setting from a `.env` file next to it, with defaults for the optional ones, instead of values typed into the file. If you switch to the new `compose.yaml`, put your settings in `.env` (start from `.env.example`). Compose refuses to start without `REDDIT_CLIENT_ID` and `REDDIT_CLIENT_SECRET`.
 - The compose service is renamed from `app` to `anything-goes-archive`, matching the container name. If you switch to the new `compose.yaml`, first run `docker compose down` with the old one. Otherwise Compose stops with an error that the container name `anything-goes-archive` is already in use, and `--remove-orphans` doesn't avoid it.
 - Optional: the example `compose.yaml` now hardens the container with `user`, `cap_drop: ALL`, `no-new-privileges`, a read-only filesystem (`read_only: true`, with a 256 MB `/tmp` tmpfs), `init: true`, a 1 GB memory limit (`mem_limit: 1g`) and a 128-process limit (`pids_limit: 128`). Copy those settings into your own compose file to get the same protection. Nothing breaks if you skip them.
+- The undocumented `DATABASE_URL` setting is removed. The database is always `./data/data.db` (`/app/data/data.db` in the container). If you set `DATABASE_URL`, move your database file there before upgrading.
 
 ### What's New
 
 - New optional `FORWARDED_ALLOW_IPS` setting for running behind a reverse proxy. Set it to your proxy's IP so logs show real client IPs instead of the proxy's, and redirects (like `/settings/` to `/settings`) keep `https://` instead of dropping to `http://`.
+- New optional `REDDIT_USER_AGENT` setting, so the requests to Reddit's API can carry your own username instead of the project author's.
 - Runs on Python 3.14, up from 3.13, with every dependency updated to its latest release.
 - The image's labels are accurate: title `Anything Goes Archive` and the project's own description instead of the repository name and its GitHub About text, plus the base image's name. GHCR's package page shows the description. Local builds leave out the build date, commit, and version instead of setting them to `unknown`.
 
