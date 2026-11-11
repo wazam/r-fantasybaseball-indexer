@@ -4,6 +4,7 @@ from sqlalchemy.sql import func
 
 Base = declarative_base()
 
+
 class Thread(Base):
     __tablename__ = 'threads'
 
@@ -22,6 +23,7 @@ class Thread(Base):
     last_saved = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
 
     comments = relationship("Comment", back_populates="thread")
+
 
 class Comment(Base):
     __tablename__ = 'comments'
@@ -45,6 +47,7 @@ class Comment(Base):
 
     thread = relationship("Thread", back_populates="comments")
 
+
 class ListItem(Base):
     __tablename__ = 'list_items'
 
@@ -52,6 +55,7 @@ class ListItem(Base):
     item_value = Column(String, primary_key=True)  # username or comment id, depending on list_name
 
     created_at = Column(DateTime, default=func.now(), nullable=False)
+
 
 class Setting(Base):
     __tablename__ = 'settings'

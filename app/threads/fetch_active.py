@@ -9,12 +9,13 @@ from app.threads.search import get_thread_urls
 
 logger = logging.getLogger(__name__)
 
+
 def deactivate_old_threads():
     cutoff = datetime.now(UTC) - timedelta(hours=get_active_hours())
 
     with SessionLocal() as session:
         updated = session.query(Thread).filter(
-            Thread.is_active == True,
+            Thread.is_active == True,  # noqa: E712 (SQLAlchemy needs ==)
             Thread.posted_at < cutoff
         ).update({
             Thread.is_active: False,
@@ -23,6 +24,7 @@ def deactivate_old_threads():
         session.commit()
 
     logger.info(f"Marked {updated} thread(s) as inactive.")
+
 
 def activate_all_threads():
     with SessionLocal() as session:
@@ -34,9 +36,10 @@ def activate_all_threads():
 
     logger.info(f"Marked {updated} thread(s) as active.")
 
+
 def fetch_active_threads():
     with SessionLocal() as session:
-        active_threads = session.query(Thread).filter(Thread.is_active == True).all()
+        active_threads = session.query(Thread).filter(Thread.is_active == True).all()  # noqa: E712 (SQLAlchemy needs ==)
 
     if not active_threads:
         logger.info("No active threads to update.")
@@ -49,6 +52,7 @@ def fetch_active_threads():
         fetch_and_store_thread(thread.permalink)
 
     logger.info(f"Updated {len(active_threads)} active thread(s).")
+
 
 def fetch_new_threads():
     recent_urls = get_thread_urls()
@@ -65,6 +69,7 @@ def fetch_new_threads():
             added += 1
 
     logger.info(f"Fetched {added} new thread(s).")
+
 
 # Run with: pipenv run python -m app.threads.fetch_active
 if __name__ == "__main__":
