@@ -19,6 +19,7 @@ jobs:
       contents: read
       packages: write
       id-token: write
+      attestations: write
 
     steps:
       - name: Checkout
@@ -74,16 +75,21 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Install cosign
-        uses: sigstore/cosign-installer@v3
-
-      - name: Sign image
-        run: |
-          echo "${{ steps.meta.outputs.tags }}" | xargs -I {} cosign sign --yes {}@${{ steps.build-and-push.outputs.digest }}
+      # Stored in GitHub's attestation store, not pushed to GHCR. A cosign signature pushed as a tag
+      # became the package's newest version, so the package page showed it instead of the image
+      - name: Attest build provenance
+        uses: actions/attest@v4
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.build-and-push.outputs.digest }}
 
   push-dockerhub:
     name: Push to Docker Hub
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
 
     steps:
       - name: Checkout
@@ -120,6 +126,7 @@ jobs:
           echo "text=$description" >> "$GITHUB_OUTPUT"
 
       - name: Build and push
+        id: build-and-push
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -136,3 +143,9 @@ jobs:
             index:org.opencontainers.image.description=${{ steps.description.outputs.text }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Attest build provenance
+        uses: actions/attest@v4
+        with:
+          subject-name: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/r-fantasybaseball-indexer
+          subject-digest: ${{ steps.build-and-push.outputs.digest }}

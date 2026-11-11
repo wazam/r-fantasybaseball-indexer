@@ -79,7 +79,7 @@ sleep 15  # give GitHub a moment to queue the run
 gh run watch --exit-status "$(gh run list --workflow compose-test.yml --event workflow_run --commit "$(git rev-parse HEAD)" --limit 1 --json databaseId -q '.[0].databaseId')"
 ```
 
-Docker Publish builds amd64 and arm64, pushes to GHCR (cosign-signed) and Docker Hub, and tags `X.Y.Z`, `X.Y`, `latest` and `main`. When it finishes, it starts one Compose Test run with four jobs: the `X.Y.Z` image from each registry, on amd64 and arm64 runners. All four must pass. The `--commit` filter keeps an earlier release's run from being picked up, and matches only while nothing else lands on `main` between the release commit and the tag push.
+Docker Publish builds amd64 and arm64, pushes to GHCR and Docker Hub with a build provenance attestation for each, and tags `X.Y.Z`, `X.Y`, `latest` and `main`. When it finishes, it starts one Compose Test run with four jobs: the `X.Y.Z` image from each registry, on amd64 and arm64 runners. All four must pass. The `--commit` filter keeps an earlier release's run from being picked up, and matches only while nothing else lands on `main` between the release commit and the tag push.
 
 A disabled workflow starts on no trigger, so a Compose Test that GitHub disabled for inactivity skips this run without a word. Before pushing the tag, `gh workflow list` must show Compose Test as `active`; if it doesn't, `gh workflow enable compose-test.yml`.
 
@@ -105,12 +105,13 @@ awk '/^## \[vX.Y.Z\]/{f=1;next} /^## /{f=0} f' CHANGELOG.md \
 
 ```bash
 docker buildx imagetools inspect ghcr.io/wazam/r-fantasybaseball-indexer:X.Y.Z   # both platforms present
-cosign verify ghcr.io/wazam/r-fantasybaseball-indexer:X.Y.Z \
-  --certificate-identity "https://github.com/wazam/r-fantasybaseball-indexer/.github/workflows/docker.yml@refs/tags/vX.Y.Z" \
-  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+for image in ghcr.io/wazam/r-fantasybaseball-indexer:X.Y.Z wazam123/r-fantasybaseball-indexer:X.Y.Z; do
+  gh attestation verify oci://$image --repo wazam/r-fantasybaseball-indexer \
+    --signer-workflow wazam/r-fantasybaseball-indexer/.github/workflows/docker.yml --source-ref refs/tags/vX.Y.Z
+done
 ```
 
-Without cosign installed, run the same arguments through its official image, `docker run --rm ghcr.io/sigstore/cosign/cosign:v2.N.P verify ...`, then remove the image. Pin a 2.x release at least two weeks old, since `docker.yml`'s `cosign-installer@v3` signs with cosign 2.x.
+The attestations live in GitHub's attestation store, not in the registries, so nothing besides the image lands in GHCR, and its package page shows the image. Up to v0.4.0, `docker.yml` signed with cosign instead, and the signature, pushed last as a tag in the image's package, was what the package page showed. Those releases still verify with `cosign verify ghcr.io/wazam/r-fantasybaseball-indexer:X.Y.Z --certificate-identity "https://github.com/wazam/r-fantasybaseball-indexer/.github/workflows/docker.yml@refs/tags/vX.Y.Z" --certificate-oidc-issuer https://token.actions.githubusercontent.com`, through `docker run --rm ghcr.io/sigstore/cosign/cosign:v2.N.P verify ...` where cosign isn't installed.
 
 Then the labels and GHCR's description annotation, in both registries. Each platform should show the same 12 labels: the Dockerfile's 9 (title, description, url, source, documentation, licenses, authors, vendor, base.name), plus `created`, `revision` equal to `git rev-parse vX.Y.Z^{commit}`, and `version` `X.Y.Z`. The index should hold the description:
 
@@ -121,7 +122,7 @@ for image in ghcr.io/wazam/r-fantasybaseball-indexer:X.Y.Z wazam123/r-fantasybas
 done
 ```
 
-Then open `https://github.com/wazam/r-fantasybaseball-indexer/pkgs/container/r-fantasybaseball-indexer` and check it shows the description.
+Then open `https://github.com/wazam/r-fantasybaseball-indexer/pkgs/container/r-fantasybaseball-indexer` and check that its header shows the `X.Y.Z` image, not a `sha256-...sig` tag, with the description and a `docker pull` command for the image.
 
 ## 9. Update Docker Hub and GitHub About
 

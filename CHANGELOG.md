@@ -2,6 +2,16 @@
 
 Release notes for every version, newest first. Each version is tagged in git and has a matching [release on GitHub](https://github.com/wazam/r-fantasybaseball-indexer/releases). Changes that haven't been released yet collect under **Unreleased**, and [RELEASING.md](RELEASING.md) covers how to ship them.
 
+## Unreleased
+
+### What's New
+
+- Images on both GHCR and Docker Hub carry a GitHub build provenance attestation, recording the repository, workflow, tag and commit that built them, in place of the cosign signature only GHCR's images had. To check one: `gh attestation verify oci://ghcr.io/wazam/r-fantasybaseball-indexer:<version> --repo wazam/r-fantasybaseball-indexer`.
+
+### Bug Fixes
+
+- GHCR's package page shows the image, with its description and a `docker pull` command for it. The cosign signature was stored as a tag in the same package and, pushed last, became the version the page showed, with no description and a pull command for the signature. The attestations that replace it are kept by GitHub, outside the registry.
+
 ## [v0.4.0](https://github.com/wazam/r-fantasybaseball-indexer/releases/tag/v0.4.0) (2026-11-11)
 
 ### Upgrading
