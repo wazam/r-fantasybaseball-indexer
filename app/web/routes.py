@@ -5,8 +5,8 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from starlette.templating import Jinja2Templates
@@ -159,41 +159,53 @@ def delete_setting(key: str, db: Session = Depends(get_db)):
     return {"status": "ok"}
 
 
-def build_comment_tree(comments, sort_by: str = "new"):
-    children = {}
-    roots = []
-    comment_map = {c.id: c for c in comments}
+# Sort key for each sort order on a thread page; "old" has none and keeps the query's oldest-first order.
+_SORT_KEYS = {
+    "new": lambda c: c.created_utc,
+    "top": lambda c: c.score,
+    "qa": lambda c: c.replies_all,
+}
 
+
+def build_comment_tree(comments, sort_by: str = "new"):
+    """A thread's comments as a nested tree, flattened into rows of comment and depth."""
+    roots, children = _group_by_parent(comments)
+    key = _SORT_KEYS.get(sort_by)
+    if key:
+        # Top ranks each top-level comment by the best score anywhere in its subtree
+        roots.sort(key=_best_subtree_score(children) if sort_by == "top" else key, reverse=True)
+        for replies in children.values():
+            replies.sort(key=key, reverse=True)
+    return _flatten(roots, children)
+
+
+def _group_by_parent(comments):
+    """Top-level comments, and each comment's replies by parent id, both in input order."""
+    roots = []
+    children = {}
     for c in comments:
         if c.parent_id is None:
             roots.append(c)
         else:
             children.setdefault(c.parent_id, []).append(c)
+    return roots, children
 
-    if sort_by == "top":
-        def max_subtree_score(cid):
-            score = comment_map[cid].score
-            stack = list(children.get(cid, []))
-            while stack:
-                child = stack.pop()
-                score = max(score, child.score)
-                stack.extend(children.get(child.id, []))
-            return score
 
-        roots.sort(key=lambda c: max_subtree_score(c.id), reverse=True)
-        for parent_id in children:
-            children[parent_id].sort(key=lambda c: c.score, reverse=True)
+def _best_subtree_score(children):
+    """A sort key: the highest score among a comment and all its replies, at any depth."""
+    def best(comment):
+        score = comment.score
+        stack = list(children.get(comment.id, []))
+        while stack:
+            child = stack.pop()
+            score = max(score, child.score)
+            stack.extend(children.get(child.id, []))
+        return score
+    return best
 
-    elif sort_by == "new":
-        roots.sort(key=lambda c: c.created_utc, reverse=True)
-        for parent_id in children:
-            children[parent_id].sort(key=lambda c: c.created_utc, reverse=True)
 
-    elif sort_by == "qa":
-        roots.sort(key=lambda c: c.replies_all, reverse=True)
-        for parent_id in children:
-            children[parent_id].sort(key=lambda c: c.replies_all, reverse=True)
-
+def _flatten(roots, children):
+    """Walk the tree depth first into rows of comment and depth, the order a thread page shows."""
     result = []
     stack = [(c, 0) for c in reversed(roots)]
     while stack:

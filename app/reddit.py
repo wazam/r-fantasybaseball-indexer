@@ -11,131 +11,138 @@ logger = logging.getLogger(__name__)
 
 reddit = get_reddit_client()
 
+FETCH_RETRIES = 3
+RETRY_DELAY_SECONDS = 15
+
+
 def fetch_and_store_thread(submission_url: str):
-    session = SessionLocal()
+    fetched = _fetch_submission(submission_url)
+    if fetched is None:
+        return
+    submission, all_comments = fetched
 
-    try:
-        retries = 3
-        delay = 15  # seconds
-
-        for attempt in range(1, retries + 1):
-            try:
-                submission = reddit.submission(url=submission_url)
-                submission.comments.replace_more(limit=None)
-                all_comments = submission.comments.list()
-                break  # success
-            except TooManyRequests as e:
-                if attempt < retries:
-                    logger.warning(f"429 TooManyRequests, retrying in {delay}s (attempt {attempt}/{retries})...")
-                    time.sleep(delay)
-                else:
-                    logger.error(f"Thread failed after {retries} retries: {submission_url}")
-                    session.rollback()
-                    session.close()
-                    return
-            except Exception as e:
-                logger.error(f"Couldn't fetch thread: {e}")
-                session.rollback()
-                session.close()
+    with SessionLocal() as session:
+        try:
+            thread = _store_thread(session, submission, submission_url, len(all_comments))
+            if thread is None:
                 return
-
-        reddit_id = submission.id
-        existing_thread = session.query(Thread).filter_by(reddit_id=reddit_id).first()
-        if existing_thread and not existing_thread.is_active:
-            logger.info(f"Skipping already archived thread: {existing_thread.title}")
-            return
-
-        logger.info(f"Storing thread: {submission.title}")
-
-        def is_active_thread(posted_at: datetime) -> bool:
-            hours = get_active_hours()
-            return datetime.now(UTC) - posted_at < timedelta(hours=hours)
-
-        posted_at = datetime.fromtimestamp(submission.created_utc, UTC)
-        active_status = is_active_thread(posted_at)
-
-        if not existing_thread:
-            thread = Thread(
-                reddit_id=reddit_id,
-                title=submission.title,
-                permalink=submission_url,
-                score=submission.score,
-                posted_at=posted_at,
-                comment_count=len(all_comments),
-                is_active=active_status
-            )
-            session.add(thread)
+            _store_comments(session, thread, all_comments)
             session.commit()
-        else:
-            # Update existing thread
-            if existing_thread.is_active:
-                existing_thread.score = submission.score
-                existing_thread.comment_count = len(all_comments)
-                existing_thread.last_saved = datetime.now(UTC)
-                existing_thread.is_active = active_status
-                session.commit()
-                thread = existing_thread
+            logger.info(f"Stored {len(all_comments)} comments.")
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Could not store thread: {e}")
+
+
+def _fetch_submission(submission_url: str):
+    """Fetch a thread and its full comment list, retrying when Reddit rate limits. None if it fails."""
+    for attempt in range(1, FETCH_RETRIES + 1):
+        try:
+            submission = reddit.submission(url=submission_url)
+            submission.comments.replace_more(limit=None)
+            return submission, submission.comments.list()
+        except TooManyRequests:
+            if attempt < FETCH_RETRIES:
+                logger.warning(
+                    f"429 TooManyRequests, retrying in {RETRY_DELAY_SECONDS}s (attempt {attempt}/{FETCH_RETRIES})..."
+                )
+                time.sleep(RETRY_DELAY_SECONDS)
             else:
-                logger.info("Skipping update for inactive thread.")
-                return
+                logger.error(f"Thread failed after {FETCH_RETRIES} retries: {submission_url}")
+        except Exception as e:
+            logger.error(f"Couldn't fetch thread: {e}")
+            return None
+    return None
 
-        replies_map = {}
-        for c in all_comments:
-            parent = c.parent_id.split("_")[-1] if c.parent_id.startswith("t1_") else None
-            if parent:
-                replies_map.setdefault(parent, []).append(c.id)
 
-        def count_all_descendants(cid):
-            count = 0
-            stack = replies_map.get(cid, [])
-            while stack:
-                child = stack.pop()
-                count += 1
-                stack.extend(replies_map.get(child, []))
-            return count
+def _store_thread(session, submission, submission_url: str, comment_count: int):
+    """Add or update the thread's row and commit it. None if the thread is already archived."""
+    existing = session.query(Thread).filter_by(reddit_id=submission.id).first()
+    if existing and not existing.is_active:
+        logger.info(f"Skipping already archived thread: {existing.title}")
+        return None
 
-        for c in all_comments:
-            cid = c.id
-            author = str(c.author)
-            body = c.body
+    logger.info(f"Storing thread: {submission.title}")
 
-            existing_comment = session.query(Comment).filter_by(id=cid).first()
+    posted_at = datetime.fromtimestamp(submission.created_utc, UTC)
+    is_active = datetime.now(UTC) - posted_at < timedelta(hours=get_active_hours())
 
-            if existing_comment:
-                if body == "[deleted]" or body == "[removed]" or author == "[deleted]":
-                    continue
+    if existing:
+        existing.score = submission.score
+        existing.comment_count = comment_count
+        existing.last_saved = datetime.now(UTC)
+        existing.is_active = is_active
+        thread = existing
+    else:
+        thread = Thread(
+            reddit_id=submission.id,
+            title=submission.title,
+            permalink=submission_url,
+            score=submission.score,
+            posted_at=posted_at,
+            comment_count=comment_count,
+            is_active=is_active
+        )
+        session.add(thread)
+    session.commit()
+    return thread
 
-                if body != existing_comment.body:
-                    existing_comment.body = body
 
-                existing_comment.score = c.score
-                existing_comment.last_saved = datetime.now(UTC)
+def _store_comments(session, thread: Thread, all_comments):
+    """Add new comments and update stored ones. Deleted and removed comments keep their archived text."""
+    replies_direct, replies_all = _reply_counts(all_comments)
+
+    for c in all_comments:
+        author = str(c.author)
+        body = c.body
+        existing = session.query(Comment).filter_by(id=c.id).first()
+
+        if existing:
+            if body in ("[deleted]", "[removed]") or author == "[deleted]":
                 continue
+            existing.body = body
+            existing.score = c.score
+            existing.last_saved = datetime.now(UTC)
+            continue
 
-            comment = Comment(
-                id=cid,
-                thread_id=thread.id,
-                parent_id=c.parent_id.split("_")[-1] if c.parent_id.startswith("t1_") else None,
-                body=body,
-                author=author,
-                flair=c.author_flair_text,
-                score=c.score,
-                created_utc=datetime.fromtimestamp(c.created_utc, UTC),
-                permalink=f"https://www.reddit.com{c.permalink}",
-                replies_direct=len(replies_map.get(cid, [])),
-                replies_all=count_all_descendants(cid)
-            )
-            session.add(comment)
+        session.add(Comment(
+            id=c.id,
+            thread_id=thread.id,
+            parent_id=_parent_id(c),
+            body=body,
+            author=author,
+            flair=c.author_flair_text,
+            score=c.score,
+            created_utc=datetime.fromtimestamp(c.created_utc, UTC),
+            permalink=f"https://www.reddit.com{c.permalink}",
+            replies_direct=replies_direct.get(c.id, 0),
+            replies_all=replies_all.get(c.id, 0)
+        ))
 
-        session.commit()
-        logger.info(f"Stored {len(all_comments)} comments.")
 
-    except Exception as e:
-        session.rollback()
-        logger.error(f"Could not store thread: {e}")
+def _parent_id(comment):
+    """The parent comment's id, or None for a top-level comment (whose parent is the thread)."""
+    return comment.parent_id.split("_")[-1] if comment.parent_id.startswith("t1_") else None
 
-    finally:
-        session.close()
+
+def _reply_counts(all_comments):
+    """Direct and total (all descendants) reply counts per comment id, from this fetch's comments."""
+    children = {}
+    for c in all_comments:
+        parent = _parent_id(c)
+        if parent:
+            children.setdefault(parent, []).append(c.id)
+
+    def descendants(cid):
+        count = 0
+        stack = list(children.get(cid, []))
+        while stack:
+            count += 1
+            stack.extend(children.get(stack.pop(), []))
+        return count
+
+    return {cid: len(kids) for cid, kids in children.items()}, {cid: descendants(cid) for cid in children}
+
 
 # Run with: pipenv run python -m app.reddit
 if __name__ == "__main__":

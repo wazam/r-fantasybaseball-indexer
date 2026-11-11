@@ -34,38 +34,28 @@ class ParsedQuery:
     score_filters: list = field(default_factory=list)  # list of (op, int)
 
 
+# Where a token's value goes: a field keyword first, then a + or - sign, otherwise the OR terms
+_FIELD_LISTS = {"author": "authors", "user": "authors", "flair": "flairs"}
+_SIGN_LISTS = {"+": "required_terms", "-": "excluded_terms"}
+
+
 def parse_search_query(q: str) -> ParsedQuery:
     parsed = ParsedQuery()
-    if not q:
-        return parsed
-
-    for m in _TOKEN_PATTERN.finditer(q):
+    for m in _TOKEN_PATTERN.finditer(q or ""):
         value = m.group("quoted") if m.group("quoted") is not None else m.group("word")
-        if not value:
-            continue
-
-        sign = m.group("sign")
-        fieldname = m.group("fieldname")
-        if fieldname:
-            fieldname = fieldname.lower()
-
-        if fieldname in ("author", "user"):
-            parsed.authors.append(value)
-        elif fieldname == "flair":
-            parsed.flairs.append(value)
-        elif fieldname == "score":
-            score_match = _SCORE_PATTERN.match(value)
-            if score_match:
-                op = score_match.group("op") or "="
-                parsed.score_filters.append((op, int(score_match.group("num"))))
-        elif sign == "+":
-            parsed.required_terms.append(value)
-        elif sign == "-":
-            parsed.excluded_terms.append(value)
-        else:
-            parsed.or_terms.append(value)
-
+        if value:
+            _add_term(parsed, (m.group("fieldname") or "").lower(), m.group("sign"), value)
     return parsed
+
+
+def _add_term(parsed: ParsedQuery, fieldname: str, sign, value: str):
+    """Put one search token's value in the list it belongs to."""
+    if fieldname == "score":
+        score_match = _SCORE_PATTERN.match(value)
+        if score_match:
+            parsed.score_filters.append((score_match.group("op") or "=", int(score_match.group("num"))))
+        return
+    getattr(parsed, _FIELD_LISTS.get(fieldname) or _SIGN_LISTS.get(sign, "or_terms")).append(value)
 
 
 def apply_search_filters(query, parsed: ParsedQuery):
