@@ -13,6 +13,7 @@ from starlette.templating import Jinja2Templates
 from app.config import get_refresh_minutes
 from app.db import init_db
 from app.threads.backfill import backfill_missing_threads, fetch_missing_threads
+from app.threads.deleted_authors import relabel_deleted_authors_once
 from app.threads.fetch_active import deactivate_old_threads, fetch_active_threads, fetch_new_threads
 from app.threads.reply_counts import recount_replies_once
 from app.web.routes import router, static_version
@@ -54,6 +55,7 @@ def update_threads():
 async def lifespan(app: FastAPI):
     init_db()
     recount_replies_once()
+    relabel_deleted_authors_once()
 
     scheduler = BackgroundScheduler()
 

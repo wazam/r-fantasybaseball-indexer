@@ -93,14 +93,14 @@ def _store_comments(session, thread: Thread, all_comments):
     replies_direct, replies_all = _reply_counts(all_comments)
 
     for c in all_comments:
-        author = str(c.author)
+        author = c.author.name if c.author else "[deleted]"  # PRAW gives None for a deleted account
         body = c.body
         existing = session.query(Comment).filter_by(id=c.id).first()
 
         if existing:
             existing.replies_direct = replies_direct.get(c.id, 0)  # counts change as replies arrive
             existing.replies_all = replies_all.get(c.id, 0)
-            if body in ("[deleted]", "[removed]") or author == "[deleted]":
+            if body in ("[deleted]", "[removed]"):
                 continue
             existing.body = body
             existing.score = c.score

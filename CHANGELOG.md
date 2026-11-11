@@ -23,6 +23,7 @@ Release notes for every version, newest first. Each version is tagged in git and
 
 - Fixed security vulnerabilities in two dependencies: certifi trusted root certificates whose keys were compromised (critical), and urllib3 could hang, use unbounded memory, or ignore HTTPS proxy settings (high).
 - Q&A sort on a thread page now puts the comments with the most replies first. Each comment's reply counts were saved once and never updated, so comments that drew replies later sorted too low. The first start after upgrading recounts the reply counts of every stored comment, which takes a few seconds.
+- Comments from deleted Reddit accounts show `[deleted]` as their author, as on Reddit, instead of `None`, which looked like a single user and linked to an unrelated account, u/None. Comments archived before their author deleted the account keep the name. The first start after upgrading relabels stored comments, and a blocked or favorited `None` carries over to `[deleted]`.
 - Comments with stray asterisks, underscores or tildes now display the way Reddit shows them, instead of turning part of the comment bold or italic. Strikethrough written like `~~this~~that` now renders correctly too.
 
 ## [v0.3.0](https://github.com/wazam/r-fantasybaseball-indexer/releases/tag/v0.3.0) (2026-09-17)

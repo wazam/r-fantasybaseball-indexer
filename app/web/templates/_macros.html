@@ -1,1 +1,1 @@
-{% macro author_link(username) %}<button class="comment-author" aria-label="View profile for {{ username }}" onclick="openAuthorSummary('{{ username }}', event)">{{ username }}</button>{% endmacro %}
+{% macro author_link(username) %}{% if username == "[deleted]" %}<span class="comment-author comment-author-deleted">[deleted]</span>{% else %}<button class="comment-author" aria-label="View profile for {{ username }}" onclick="openAuthorSummary('{{ username }}', event)">{{ username }}</button>{% endif %}{% endmacro %}

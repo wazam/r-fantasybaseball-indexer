@@ -324,6 +324,14 @@ button.comment-author {
 
 button.comment-author:hover { text-decoration-style: solid; }
 
+/* [deleted] stands for every deleted account: plain text, no profile */
+.comment-author.comment-author-deleted {
+  font-weight: 600;
+  color: #787c7e;
+  flex: 0 1 auto;
+  white-space: nowrap;
+}
+
 .comment-flair {
   background: #edeff1;
   color: #1c1c1c;
@@ -1137,6 +1145,7 @@ html.dark .comment.depth-2,
 html.dark .comment.depth-3,
 html.dark .comment.depth-4 { border-left-color: #474748; }
 html.dark .comment-author { color: #d7dadc; }
+html.dark .comment-author.comment-author-deleted { color: #818384; }
 html.dark .comment-body th,
 html.dark .comment-body td { border-color: #343536; }
 html.dark .comment-body th { background: #272729; }

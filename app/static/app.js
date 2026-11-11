@@ -509,11 +509,15 @@ function renderUserChipList(containerId, users, removeFn, rerenderFn) {
   users.forEach(function(username) {
     var li = document.createElement('li');
     li.className = 'blocked-user-chip';
-    var nameBtn = document.createElement('button');
-    nameBtn.className = 'comment-author';
+    // [deleted] stands for every deleted account, so it has no profile to open
+    var isDeleted = username === '[deleted]';
+    var nameBtn = document.createElement(isDeleted ? 'span' : 'button');
+    nameBtn.className = isDeleted ? 'comment-author comment-author-deleted' : 'comment-author';
     nameBtn.textContent = username;
-    nameBtn.setAttribute('aria-label', 'View profile for ' + username);
-    nameBtn.onclick = function(e) { openAuthorSummary(username, e); };
+    if (!isDeleted) {
+      nameBtn.setAttribute('aria-label', 'View profile for ' + username);
+      nameBtn.onclick = function(e) { openAuthorSummary(username, e); };
+    }
     var removeBtn = document.createElement('button');
     removeBtn.className = 'blocked-user-remove';
     removeBtn.setAttribute('aria-label', 'Remove ' + username);
