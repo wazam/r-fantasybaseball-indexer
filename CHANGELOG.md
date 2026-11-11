@@ -22,6 +22,7 @@ Release notes for every version, newest first. Each version is tagged in git and
 ### Bug Fixes
 
 - Fixed security vulnerabilities in two dependencies: certifi trusted root certificates whose keys were compromised (critical), and urllib3 could hang, use unbounded memory, or ignore HTTPS proxy settings (high).
+- Q&A sort on a thread page now puts the comments with the most replies first. Each comment's reply counts were saved once and never updated, so comments that drew replies later sorted too low. The first start after upgrading recounts the reply counts of every stored comment, which takes a few seconds.
 - Comments with stray asterisks, underscores or tildes now display the way Reddit shows them, instead of turning part of the comment bold or italic. Strikethrough written like `~~this~~that` now renders correctly too.
 
 ## [v0.3.0](https://github.com/wazam/r-fantasybaseball-indexer/releases/tag/v0.3.0) (2026-09-17)

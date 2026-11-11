@@ -98,6 +98,8 @@ def _store_comments(session, thread: Thread, all_comments):
         existing = session.query(Comment).filter_by(id=c.id).first()
 
         if existing:
+            existing.replies_direct = replies_direct.get(c.id, 0)  # counts change as replies arrive
+            existing.replies_all = replies_all.get(c.id, 0)
             if body in ("[deleted]", "[removed]") or author == "[deleted]":
                 continue
             existing.body = body
