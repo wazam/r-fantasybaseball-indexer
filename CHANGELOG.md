@@ -2,7 +2,7 @@
 
 Release notes for every version, newest first. Each version is tagged in git and has a matching [release on GitHub](https://github.com/wazam/r-fantasybaseball-indexer/releases). Changes that haven't been released yet collect under **Unreleased**, and [RELEASING.md](RELEASING.md) covers how to ship them.
 
-## Unreleased
+## [v0.4.0](https://github.com/wazam/r-fantasybaseball-indexer/releases/tag/v0.4.0) (2026-11-11)
 
 ### Upgrading
 
