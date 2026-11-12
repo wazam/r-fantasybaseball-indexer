@@ -56,7 +56,9 @@ git tag -n && git log --oneline --decorate -5
 
 ## 5. Push `main`, wait for CI, then push the tag
 
-Docker Publish starts the moment the tag arrives and doesn't wait for the other workflows, so `main` goes first:
+Docker Publish starts the moment the tag arrives and doesn't wait for the other workflows, so `main` goes first.
+
+Before pushing anything, `gh workflow list` must show Compose Test as `active`; if it doesn't, `gh workflow enable compose-test.yml`. A disabled workflow starts on no trigger, so a Compose Test that GitHub disabled for inactivity would skip step 6's published-image test without a word.
 
 ```bash
 git push origin main
@@ -74,14 +76,13 @@ Push one tag at a time. Several tags pushed together publish in parallel, and `l
 ## 6. Watch Docker Publish and the published-image tests
 
 ```bash
-gh run watch --exit-status "$(gh run list --workflow docker.yml --limit 1 --json databaseId -q '.[0].databaseId')"
+sleep 15  # give GitHub a moment to queue the run
+gh run watch --exit-status "$(gh run list --workflow docker.yml --commit "$(git rev-parse HEAD)" --limit 1 --json databaseId -q '.[0].databaseId')"
 sleep 15  # give GitHub a moment to queue the run
 gh run watch --exit-status "$(gh run list --workflow compose-test.yml --event workflow_run --commit "$(git rev-parse HEAD)" --limit 1 --json databaseId -q '.[0].databaseId')"
 ```
 
-Docker Publish builds amd64 and arm64, pushes to GHCR and Docker Hub with a build provenance attestation for each, and tags `X.Y.Z`, `X.Y`, `latest` and `main`. When it finishes, it starts one Compose Test run with four jobs: the `X.Y.Z` image from each registry, on amd64 and arm64 runners. All four must pass. The `--commit` filter keeps an earlier release's run from being picked up, and matches only while nothing else lands on `main` between the release commit and the tag push.
-
-A disabled workflow starts on no trigger, so a Compose Test that GitHub disabled for inactivity skips this run without a word. Before pushing the tag, `gh workflow list` must show Compose Test as `active`; if it doesn't, `gh workflow enable compose-test.yml`.
+Docker Publish builds amd64 and arm64, pushes to GHCR and Docker Hub with a build provenance attestation for each, and tags `X.Y.Z`, `X.Y`, `latest` and `main`. When it finishes, it starts one Compose Test run with four jobs: the `X.Y.Z` image from each registry, on amd64 and arm64 runners. All four must pass. The `--commit` filters keep an earlier release's runs from being picked up; without them, the first `gh run list` can return the previous release's finished Docker Publish run, and `gh run watch` passes at once. The Compose Test filter matches only while nothing else lands on `main` between the release commit and the tag push.
 
 If one fails, point `latest` back at the previous version (nothing gets rebuilt), then fix forward with a new patch version:
 
@@ -126,7 +127,7 @@ Then open `https://github.com/wazam/r-fantasybaseball-indexer/pkgs/container/r-f
 
 ### GHCR package versions
 
-GHCR lists every manifest as a version. A release adds three: its tagged index and, untagged, the amd64 and arm64 images the index points to. v0.4.1 and older also have two untagged `unknown/unknown` provenance manifests each. Never delete an untagged version that a tagged index lists: pulls of that release, or tools that read the whole index, break. To see what each version is:
+GHCR lists every manifest as a version. A release adds three: its tagged index and, untagged, the amd64 and arm64 images the index points to. v0.4.1 and older also have two untagged `unknown/unknown` provenance manifests each. Never delete an untagged version that a tagged index lists: pulls of that release, or tools that read the whole index, break. Docker Hub's Image Management page lists the same manifests under the same rule, its "Preview and delete" also takes everything a selected index references, and its deletions can't be undone. To see what each version is:
 
 ```bash
 gh api --paginate '/users/wazam/packages/container/r-fantasybaseball-indexer/versions?per_page=100' \
@@ -140,7 +141,12 @@ Listing needs a token with `read:packages` and deleting one with `delete:package
 
 They copy the README and don't update on their own (GHCR's page does):
 
-- **Docker Hub:** at hub.docker.com, open the repository's General tab and update the overview (intro, features, the Quick Start `compose.yaml`, required settings; absolute links) and the short description (at most 100 characters, saying what the README's first sentence says). Then check the public page, `https://hub.docker.com/r/wazam123/r-fantasybaseball-indexer`.
+- **Docker Hub:** at hub.docker.com, open the repository's General tab and update the overview and the short description (at most 100 characters, saying what the README's first sentence says). The overview copies the README in this order, with every link absolute:
+  - a first line `GitHub: https://github.com/wazam/r-fantasybaseball-indexer`, then the README's intro paragraph without its icon (Docker Hub shows the repository's avatar)
+  - `## Quick Start`: the pointer to Set Up Reddit API Access, the two registries, the `compose.yaml`, the `./data` owner paragraph, and the numbered steps, without Build from Source or Manual Install
+  - `## Features`, then `## Issues and Feature Requests` with the sentence from the README's Contributing section
+
+  Then check the public page, `https://hub.docker.com/r/wazam123/r-fantasybaseball-indexer`.
 - **GitHub About:** the same sentence, through the gear icon next to About or `gh repo edit wazam/r-fantasybaseball-indexer --description "..."`.
 
 The sentence also lives in the Dockerfile's `org.opencontainers.image.description` label, which `docker.yml` reads for GHCR's package page. A new sentence goes into the Dockerfile in the release's own commits, then onto Docker Hub and GitHub About here. Keep double quotes out of it: the label is written in double quotes, and `docker.yml`'s `sed` stops at the first one.
