@@ -5,6 +5,7 @@ FROM python:${DOCKER_PYTHON_V} AS builder
 
 WORKDIR /app
 
+# Quiet pip's running-as-root and version-check notices during the build, and keep the venv in the project
 ENV PIP_ROOT_USER_ACTION=ignore \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIPENV_VENV_IN_PROJECT=1
@@ -19,9 +20,10 @@ FROM python:${DOCKER_PYTHON_V} AS runtime
 
 ARG DOCKER_PYTHON_V
 
-# Labels that never change between builds. docker.yml adds created, revision and version.
+# Labels that don't change between builds. Docker Publish adds created, revision and version, so local
+# builds leave them out rather than guess, and reads the description from here for GHCR's package page
 LABEL org.opencontainers.image.title="Anything Goes Archive" \
-    org.opencontainers.image.description="Self-hosted archiver and searchable web UI for browsing r/fantasybaseball's Anything Goes threads." \
+    org.opencontainers.image.description="Self-hosted archiver and searchable web UI for browsing r/fantasybaseball's Anything Goes threads" \
     org.opencontainers.image.url="https://github.com/wazam/r-fantasybaseball-indexer" \
     org.opencontainers.image.source="https://github.com/wazam/r-fantasybaseball-indexer" \
     org.opencontainers.image.documentation="https://github.com/wazam/r-fantasybaseball-indexer#readme" \
@@ -30,29 +32,25 @@ LABEL org.opencontainers.image.title="Anything Goes Archive" \
     org.opencontainers.image.vendor="wazam" \
     org.opencontainers.image.base.name="docker.io/library/python:${DOCKER_PYTHON_V}"
 
-ARG USERNAME=appuser
-ARG USER_UID=1000
-ARG USER_GID=${USER_UID}
-RUN groupadd --gid ${USER_GID} ${USERNAME} && \
-    useradd --uid ${USER_UID} --gid ${USER_GID} --create-home ${USERNAME}
-
-WORKDIR /app
-
+# The root filesystem may be read-only (hardened stacks), so Python doesn't write .pyc files
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-COPY --from=builder /app/.venv/ /app/.venv/
+WORKDIR /app
+
+COPY --from=builder /app/.venv/ ./.venv/
 COPY app/ ./app/
-COPY entrypoint.sh /entrypoint.sh
+COPY --chmod=755 entrypoint.sh /entrypoint.sh
 
-RUN mkdir -p /app/data && chown ${USER_UID}:${USER_GID} /app/data && \
-    chmod +x /entrypoint.sh
-
-USER ${USER_UID}:${USER_GID}
+# Owned by the default runtime UID; to run as another user with user:, mount a data folder owned by that user
+RUN mkdir -p /app/data && \
+    chown 1000:1000 /app/data
 
 EXPOSE 9009/tcp
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+USER 1000:1000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --start-interval=5s --retries=3 \
     CMD ["./.venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9009/health', timeout=3)"]
 
 ENTRYPOINT ["/entrypoint.sh"]
