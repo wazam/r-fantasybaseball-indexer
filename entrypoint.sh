@@ -8,4 +8,10 @@ if [ ! -w /app/data ]; then
     exit 1
 fi
 
+# uvicorn reads FORWARDED_ALLOW_IPS itself, before the app starts. An empty value would make it trust no proxy;
+# unset, it uses its default, 127.0.0.1,::1, so an empty value means unset like every other setting.
+if [ -z "$(printf '%s' "${FORWARDED_ALLOW_IPS-}" | tr -d ' ,')" ]; then
+    unset FORWARDED_ALLOW_IPS
+fi
+
 exec "$@"

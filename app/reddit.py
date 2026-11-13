@@ -3,13 +3,11 @@ from prawcore.exceptions import TooManyRequests
 import logging
 import time
 
-from app.config import get_reddit_client, get_active_hours
+from app.config import check_settings, get_reddit_client, get_active_hours
 from app.db import SessionLocal
 from app.models import Thread, Comment
 
 logger = logging.getLogger(__name__)
-
-reddit = get_reddit_client()
 
 FETCH_RETRIES = 3
 RETRY_DELAY_SECONDS = 15
@@ -38,7 +36,7 @@ def _fetch_submission(submission_url: str):
     """Fetch a thread and its full comment list, retrying when Reddit rate limits. None if it fails."""
     for attempt in range(1, FETCH_RETRIES + 1):
         try:
-            submission = reddit.submission(url=submission_url)
+            submission = get_reddit_client().submission(url=submission_url)
             submission.comments.replace_more(limit=None)
             return submission, submission.comments.list()
         except TooManyRequests:
@@ -146,9 +144,10 @@ def _reply_counts(all_comments):
     return {cid: len(kids) for cid, kids in children.items()}, {cid: descendants(cid) for cid in children}
 
 
-# Run with: pipenv run python -m app.reddit
+# Run with: docker exec anything-goes-archive ./.venv/bin/python -m app.reddit
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-8s %(name)s %(message)s")
+    check_settings()
     logger.info("Standalone thread fetcher using hardcoded URL.")
 
     valid_url = "https://www.reddit.com/r/fantasybaseball/comments/1s6t89c/daily_anything_goes_thread_march_29_2026/"

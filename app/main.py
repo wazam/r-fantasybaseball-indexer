@@ -1,6 +1,4 @@
 import logging
-import os
-import sys
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
@@ -10,7 +8,7 @@ from fastapi.exceptions import HTTPException
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
-from app.config import get_refresh_minutes
+from app.config import check_settings, get_backfill_cutoff, get_refresh_minutes
 from app.db import init_db
 from app.threads.backfill import backfill_missing_threads, fetch_missing_threads
 from app.threads.deleted_authors import relabel_deleted_authors_once
@@ -20,16 +18,8 @@ from app.web.routes import router, static_version
 
 logger = logging.getLogger(__name__)
 
-
-def resolve_backfill_date(value: str) -> float | None:
-    value = value.strip()
-    if not value:
-        return None
-    try:
-        return datetime.strptime(value, "%Y-%m-%d").replace(tzinfo=timezone.utc).timestamp()
-    except ValueError:
-        logger.error(f"BACKFILL_DATE '{value}' is not valid. Use YYYY-MM-DD.")
-        sys.exit(1)
+# Runs when uvicorn imports this module: a bad setting stops the app before anything starts
+check_settings()
 
 
 def run_backfill(cutoff: float):
@@ -59,9 +49,8 @@ async def lifespan(app: FastAPI):
 
     scheduler = BackgroundScheduler()
 
-    backfill_env = os.getenv("BACKFILL_DATE", "").strip()
-    if backfill_env:
-        cutoff = resolve_backfill_date(backfill_env)
+    cutoff = get_backfill_cutoff()
+    if cutoff is not None:
         logger.info("BACKFILL_DATE set. Backfill will run before the first scheduled update.")
 
         def run_backfill_then_start_interval():

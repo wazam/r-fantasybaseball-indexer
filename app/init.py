@@ -4,7 +4,7 @@ from app.db import init_db
 
 logger = logging.getLogger(__name__)
 
-# run with: pipenv run python -m app.init
+# Run with: docker exec anything-goes-archive ./.venv/bin/python -m app.init
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-8s %(name)s %(message)s")
     logger.info("Initializing database.")

@@ -71,7 +71,7 @@ def fetch_new_threads():
     logger.info(f"Fetched {added} new thread(s).")
 
 
-# Run with: pipenv run python -m app.threads.fetch_active
+# Run with: docker exec anything-goes-archive ./.venv/bin/python -m app.threads.fetch_active
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-8s %(name)s %(message)s")
 

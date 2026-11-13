@@ -1,9 +1,7 @@
 import hashlib
 import math
-import os
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
@@ -13,6 +11,7 @@ from starlette.templating import Jinja2Templates
 
 from sqlalchemy import func
 
+from app.config import get_time_zone
 from app.db import SessionLocal
 from app.models import Comment, ListItem, Setting, Thread
 from app.web.markdown_render import highlight_terms, render_markdown
@@ -35,10 +34,7 @@ templates.env.globals["static_version"] = static_version
 
 
 def _get_tz():
-    try:
-        return ZoneInfo(os.getenv("TZ", "UTC"))
-    except ZoneInfoNotFoundError:
-        return ZoneInfo("UTC")
+    return get_time_zone()
 
 
 def _localdt(dt, fmt="%b %-d, %-I:%M %p"):

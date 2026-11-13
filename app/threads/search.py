@@ -7,8 +7,6 @@ from app.config import get_reddit_client, get_active_hours
 
 logger = logging.getLogger(__name__)
 
-reddit = get_reddit_client()
-
 
 def is_valid_thread(title: str):
     title = title.lower()
@@ -30,7 +28,7 @@ def get_thread_urls(only_active=True, cutoff_date=None):
     seen_ids = set()
 
     query = "Anything Goes Thread"
-    subreddit = reddit.subreddit("fantasybaseball")
+    subreddit = get_reddit_client().subreddit("fantasybaseball")
 
     try:
         for post in subreddit.search(query, sort="new", time_filter="year", limit=None):
@@ -54,7 +52,7 @@ def get_thread_urls(only_active=True, cutoff_date=None):
     return urls
 
 
-# Run with: pipenv run python -m app.threads.search
+# Run with: docker exec anything-goes-archive ./.venv/bin/python -m app.threads.search
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-8s %(name)s %(message)s")
     logger.info("Fetching recent 'Anything Goes' thread URLs.")

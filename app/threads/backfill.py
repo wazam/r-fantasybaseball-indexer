@@ -3,6 +3,7 @@ import logging
 import sys
 from datetime import datetime, timezone
 
+from app.config import check_settings
 from app.db import SessionLocal
 from app.models import Thread
 from app.reddit import fetch_and_store_thread
@@ -37,9 +38,10 @@ def fetch_missing_threads(missing_urls):
     logger.info(f"Backfill complete. {len(missing_urls)} thread(s) fetched.")
 
 
-# Run with: pipenv run python -m app.threads.backfill 2026-02-10
+# Run with: docker exec anything-goes-archive ./.venv/bin/python -m app.threads.backfill 2026-02-10
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-8s %(name)s %(message)s")
+    check_settings()
 
     parser = argparse.ArgumentParser(description="Backfill missing Anything Goes threads.")
     parser.add_argument("date", help="Cutoff date in YYYY-MM-DD format (e.g. 2026-02-10)")
