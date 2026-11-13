@@ -18,7 +18,6 @@
 - [Quick Start](#quick-start)
   - [Run via Docker Compose](#run-via-docker-compose)
   - [Build from Source](#build-from-source)
-  - [Manual Install (Python)](#manual-install-python)
 - [Environment Variables](#environment-variables)
 - [Your Data](#your-data)
 - [Screenshots](#screenshots)
@@ -40,7 +39,7 @@
 - **Duplicate Prevention**: tracks Reddit submission and comment IDs to avoid storing duplicates
 - **Change Tracking**: updates edited comment bodies and upvote scores on each refresh; preserves deleted and removed comments in the archive
 - **Rate Limit Handling**: retries automatically when Reddit API rate limits are hit
-- **Backfill**: import threads missed while the scheduler was offline, either via a CLI tool or automatically on startup with the `BACKFILL_DATE` environment variable
+- **Backfill**: import threads missed while the scheduler was offline, automatically on startup with the `BACKFILL_DATE` environment variable, or once with `docker exec anything-goes-archive ./.venv/bin/python -m app.threads.backfill YYYY-MM-DD`
 
 ## Tech Stack
 
@@ -74,39 +73,28 @@ If you do have access, create an app at [reddit.com/prefs/apps](https://www.redd
 The image is published to [GitHub Container Registry](https://github.com/wazam/r-fantasybaseball-indexer/pkgs/container/r-fantasybaseball-indexer) (`ghcr.io/wazam/r-fantasybaseball-indexer`) and [Docker Hub](https://hub.docker.com/r/wazam123/r-fantasybaseball-indexer) (`wazam123/r-fantasybaseball-indexer`). This is the `compose.yaml` to use:
 
 ```yaml
-# https://github.com/wazam/r-fantasybaseball-indexer
 services:
   anything-goes-archive:
     image: ghcr.io/wazam/r-fantasybaseball-indexer:latest
     container_name: anything-goes-archive
     restart: unless-stopped
-    init: true
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges=true
-    read_only: true
-    user: "1000:1000" # must own ./data, see README
-    mem_limit: 1g # not 512m: headroom for backfills over the 272 MB peak measured during searches
-    pids_limit: 128
-    tmpfs:
-      - /tmp:size=256m
+    user: "1000:1000"
     environment:
-      - REDDIT_CLIENT_ID=${REDDIT_CLIENT_ID:?set it in .env}
-      - REDDIT_CLIENT_SECRET=${REDDIT_CLIENT_SECRET:?set it in .env}
-      - REDDIT_USER_AGENT=${REDDIT_USER_AGENT:-}
-      - THREAD_TTL_HOURS=${THREAD_TTL_HOURS:-24}
-      - SCHEDULER_INTERVAL_MINUTES=${SCHEDULER_INTERVAL_MINUTES:-60}
-      - BACKFILL_DATE=${BACKFILL_DATE:-}
-      - TZ=${TZ:-UTC}
-      - FORWARDED_ALLOW_IPS=${FORWARDED_ALLOW_IPS:-127.0.0.1,::1}
+      - REDDIT_CLIENT_ID=${REDDIT_CLIENT_ID}  # required
+      - REDDIT_CLIENT_SECRET=${REDDIT_CLIENT_SECRET}  # required
+      - REDDIT_USER_AGENT=${REDDIT_USER_AGENT:-}  # optional
+      - THREAD_TTL_HOURS=${THREAD_TTL_HOURS:-24}  # optional
+      - SCHEDULER_INTERVAL_MINUTES=${SCHEDULER_INTERVAL_MINUTES:-60}  # optional
+      - BACKFILL_DATE=${BACKFILL_DATE:-}  # optional
+      - TZ=${TZ:-UTC}  # optional
+      - FORWARDED_ALLOW_IPS=${FORWARDED_ALLOW_IPS:-127.0.0.1,::1}  # optional
     volumes:
       - ./data:/app/data
     ports:
       - "9009:9009"
 ```
 
-The container runs as user `1000:1000` and can only write to `./data` if that user owns it. Check the owner with `ls -nd data`. If it shows different numbers (on a Synology NAS it's often `1026 100`), set `user:` to match, for example `user: "1026:100"`, or change the owner with `sudo chown -R 1000:1000 data`.
+The container runs as user `1000:1000` and can only write to `./data` if that user owns it. Check the owner with `ls -nd data`. If it shows different numbers, set `user:` to match, for example `user: "1001:1001"`, or change the owner with `sudo chown -R 1000:1000 data`.
 
 1. **Create the data directory**
 
@@ -114,16 +102,22 @@ The container runs as user `1000:1000` and can only write to `./data` if that us
    mkdir data
    ```
 
-2. **Download the compose file and the settings template**
+2. **Download the compose file**
 
    ```sh
    curl -O https://raw.githubusercontent.com/wazam/r-fantasybaseball-indexer/main/compose.yaml
-   curl -o .env https://raw.githubusercontent.com/wazam/r-fantasybaseball-indexer/main/.env.example
    ```
 
-3. **Fill in `.env`**
+3. **Create `.env`**
 
-   Set `REDDIT_CLIENT_ID` and `REDDIT_CLIENT_SECRET` (see [Set Up Reddit API Access](#set-up-reddit-api-access)), and uncomment any optional setting you want to change. Compose refuses to start without the two credentials.
+   Next to `compose.yaml`, create a `.env` file with these two lines, filled in with your Reddit app's client ID and secret (see [Set Up Reddit API Access](#set-up-reddit-api-access)). Add any optional setting you want to change the same way, one `NAME=value` per line.
+
+   ```sh
+   REDDIT_CLIENT_ID=
+   REDDIT_CLIENT_SECRET=
+   ```
+
+   Without the two credentials, the app exits at startup with an error in `docker compose logs`.
 
 4. **Start the stack**
 
@@ -148,7 +142,7 @@ The container runs as user `1000:1000` and can only write to `./data` if that us
 
 2. **Create a .env file**
 
-   Copy `.env.example` to `.env` and fill in your Reddit API credentials.
+   In the repo folder, create `.env` with your Reddit API credentials, as in step 3 of [Run via Docker Compose](#run-via-docker-compose).
 
 3. **Build and start the stack**
 
@@ -164,69 +158,27 @@ The container runs as user `1000:1000` and can only write to `./data` if that us
 
 ---
 
-### Manual Install (Python)
-
-For running without Docker using a local Python environment.
-
-1. **Clone the repository**
-
-   ```sh
-   git clone https://github.com/wazam/r-fantasybaseball-indexer.git
-   cd r-fantasybaseball-indexer
-   ```
-
-2. **Create a .env file**
-
-   Copy `.env.example` to `.env` and fill in your Reddit API credentials.
-
-3. **Install Python environment with Pipenv**
-
-   ```sh
-   pipenv install
-   ```
-
-4. **Initialize the database**
-
-   ```sh
-   pipenv run python -m app.init
-   ```
-
-5. **Backfill missing threads (optional)**
-
-   Imports threads missed while the scheduler was offline. Requires a `YYYY-MM-DD` cutoff date to set how far back to look. This may take a couple of hours for large date ranges.
-
-   ```sh
-   pipenv run python -m app.threads.backfill 2026-02-10
-   ```
-
-6. **Start the app**
-
-   ```sh
-   pipenv run uvicorn app.main:app --reload --host 0.0.0.0 --port 9009 --log-config app/logging_config.json --env-file .env
-   ```
-
-   The web UI and scheduler run together in the same process. Then open [http://localhost:9009](http://localhost:9009) in your browser.
-   `--env-file .env` loads `.env` before uvicorn starts, which `FORWARDED_ALLOW_IPS` needs.
-
-> [!NOTE]
-> `--host 0.0.0.0` only matters here, for the manual install. The Docker image always binds this way internally. Omit the flag for localhost-only access, or keep it to reach the UI from other devices on your local network.
-
----
-
 ## Environment Variables
 
-Set these in `.env`: next to `compose.yaml` for Docker, or in the repo folder for the manual install. `compose.yaml` passes each one to the container, with the defaults below.
+Set these in a `.env` file next to `compose.yaml`, one `NAME=value` per line. `compose.yaml` passes each one you set to the container, and any you leave unset or empty keep the defaults below. A value the app can't use, such as a number below 1 or a malformed date, stops it at startup with the reason in `docker compose logs`.
 
 | Variable | Description | Required | Default |
 | --- | --- | --- | --- |
-| `REDDIT_CLIENT_ID` | Reddit app client ID. | Yes | |
-| `REDDIT_CLIENT_SECRET` | Reddit app client secret. | Yes | |
-| `REDDIT_USER_AGENT` | User agent sent to Reddit's API. Reddit asks each app to identify itself with its own username, in the form `platform:app:version (by /u/your_username)`. Leave unset to use the built-in one, which names this project's author. | No | |
-| `THREAD_TTL_HOURS` | Hours a thread stays active and continues to be refreshed before being archived. | No | `24` |
+| `REDDIT_CLIENT_ID` | Reddit app client ID, the string under the app name at [reddit.com/prefs/apps](https://www.reddit.com/prefs/apps) (see [Set Up Reddit API Access](#set-up-reddit-api-access)). | Yes | |
+| `REDDIT_CLIENT_SECRET` | Reddit app client secret, the "secret" field at [reddit.com/prefs/apps](https://www.reddit.com/prefs/apps). | Yes | |
+| `REDDIT_USER_AGENT` | User agent sent to Reddit's API. Reddit asks each app to identify itself with its own username, in the form `platform:app:version (by /u/your_username)`. Leave unset to use the built-in one, `linux:r-fantasybaseball-indexer:v<version> (by /u/wazam)`, which names this project's author. | No | |
+| `THREAD_TTL_HOURS` | Hours a thread stays active and continues to be refreshed before being archived. A whole number, at least 1. | No | `24` |
 | `BACKFILL_DATE` | Backfill missing threads on container startup before the scheduler begins. Set to a `YYYY-MM-DD` cutoff date. Leave unset to skip. | No | |
-| `SCHEDULER_INTERVAL_MINUTES` | How often the scheduler runs. Each thread with 1,000 to 3,000 comments takes roughly 2 to 3 minutes to fetch, so values below 15 are not practical. | No | `60` |
-| `TZ` | Timezone for displaying dates and times in the web UI. Accepts any [tz database identifier](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List). | No | `UTC` |
-| `FORWARDED_ALLOW_IPS` | Reverse proxy IPs to trust for `X-Forwarded-For` and `X-Forwarded-Proto` headers, comma-separated (CIDR ranges allowed). Set this to your proxy's IP when running behind a reverse proxy, so logs show real client IPs and redirects keep `https://`. Use `*` only if nothing but the proxy can reach port 9009. | No | `127.0.0.1,::1` |
+| `SCHEDULER_INTERVAL_MINUTES` | Minutes between scheduler runs, at least 1. Each thread with 1,000 to 3,000 comments takes roughly 2 to 3 minutes to fetch, so values below 15 are not practical. | No | `60` |
+| `TZ` | Time zone for the web UI's dates and the timestamps in the container's logs. Accepts any [tz database name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List); an unknown one logs a warning and uses UTC. | No | `UTC` |
+| `FORWARDED_ALLOW_IPS` | Reverse proxy IPs to trust for `X-Forwarded-For` and `X-Forwarded-Proto` headers, comma-separated (CIDR ranges allowed). Behind a reverse proxy, set this to the proxy's address as the container sees it, so the access log shows real client IPs and redirects keep `https://`: the proxy container's address on a shared Docker network, or the network's gateway (from `docker network inspect`) when the proxy runs on the host. Use `*` only if nothing but the proxy can reach port 9009. | No | `127.0.0.1,::1` |
+
+> [!TIP]
+> Other devices on your network can reach the archive at `http://<host-ip>:9009`, where `<host-ip>` is the address of the machine running Docker.
+>
+> If a reverse proxy runs on the same machine, publish the port on loopback only (`"127.0.0.1:9009:9009"` under `ports:`), so other devices can't go around the proxy.
+>
+> Do not put this on the Internet if you do not know what you are doing.
 
 ## Your Data
 
@@ -280,7 +232,7 @@ Installed to the home screen as a PWA for an app-like experience, with an extra-
 
 ## Contributing
 
-Report bugs or feature requests by opening an issue on the [GitHub repository](https://github.com/wazam/r-fantasybaseball-indexer/issues). See [CHANGELOG.md](CHANGELOG.md) for what changed in each release and [ROADMAP.md](ROADMAP.md) for planned and proposed features.
+Report bugs or feature requests by opening an issue on the [GitHub repository](https://github.com/wazam/r-fantasybaseball-indexer/issues). See [CHANGELOG.md](CHANGELOG.md) for what changed in each release, [ROADMAP.md](ROADMAP.md) for planned and proposed features, and [RELEASING.md](RELEASING.md) for how a release is made.
 
 ## Disclaimers
 

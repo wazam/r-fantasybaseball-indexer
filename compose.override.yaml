@@ -1,4 +1,4 @@
 services:
   anything-goes-archive:
-    build: .
     image: r-fantasybaseball-indexer:local
+    build: .

@@ -1,29 +1,18 @@
-# https://github.com/wazam/r-fantasybaseball-indexer
 services:
   anything-goes-archive:
     image: ghcr.io/wazam/r-fantasybaseball-indexer:latest
     container_name: anything-goes-archive
     restart: unless-stopped
-    init: true
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges=true
-    read_only: true
-    user: "1000:1000" # must own ./data, see README
-    mem_limit: 1g # not 512m: headroom for backfills over the 272 MB peak measured during searches
-    pids_limit: 128
-    tmpfs:
-      - /tmp:size=256m
+    user: "1000:1000"
     environment:
-      - REDDIT_CLIENT_ID=${REDDIT_CLIENT_ID:?set it in .env}
-      - REDDIT_CLIENT_SECRET=${REDDIT_CLIENT_SECRET:?set it in .env}
-      - REDDIT_USER_AGENT=${REDDIT_USER_AGENT:-}
-      - THREAD_TTL_HOURS=${THREAD_TTL_HOURS:-24}
-      - SCHEDULER_INTERVAL_MINUTES=${SCHEDULER_INTERVAL_MINUTES:-60}
-      - BACKFILL_DATE=${BACKFILL_DATE:-}
-      - TZ=${TZ:-UTC}
-      - FORWARDED_ALLOW_IPS=${FORWARDED_ALLOW_IPS:-127.0.0.1,::1}
+      - REDDIT_CLIENT_ID=${REDDIT_CLIENT_ID}  # required
+      - REDDIT_CLIENT_SECRET=${REDDIT_CLIENT_SECRET}  # required
+      - REDDIT_USER_AGENT=${REDDIT_USER_AGENT:-}  # optional
+      - THREAD_TTL_HOURS=${THREAD_TTL_HOURS:-24}  # optional
+      - SCHEDULER_INTERVAL_MINUTES=${SCHEDULER_INTERVAL_MINUTES:-60}  # optional
+      - BACKFILL_DATE=${BACKFILL_DATE:-}  # optional
+      - TZ=${TZ:-UTC}  # optional
+      - FORWARDED_ALLOW_IPS=${FORWARDED_ALLOW_IPS:-127.0.0.1,::1}  # optional
     volumes:
       - ./data:/app/data
     ports:

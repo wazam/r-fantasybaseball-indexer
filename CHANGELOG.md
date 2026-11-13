@@ -2,6 +2,21 @@
 
 Release notes for every version, newest first. Each version is tagged in git and has a matching [release on GitHub](https://github.com/wazam/r-fantasybaseball-indexer/releases). Changes that haven't been released yet collect under **Unreleased**, and [RELEASING.md](RELEASING.md) covers how to ship them.
 
+## Unreleased
+
+### What's New
+
+- `compose.yaml` is simpler: it no longer includes the hardening block, and each setting is marked `# optional` or `# required`. An existing `compose.yaml` keeps working. Without `REDDIT_CLIENT_ID` and `REDDIT_CLIENT_SECRET`, the app now exits at startup with an error in `docker compose logs`, where Compose used to refuse to start.
+- `.env.example` is gone. The README's Environment Variables table describes every setting and its default, and `compose.yaml` marks each one `# optional` or `# required`. Put the ones you set in `.env` next to `compose.yaml`, one `NAME=value` per line.
+- The app runs only in Docker: the README's Manual Install (Python) section is gone, and the app no longer reads `.env` itself (the `python-dotenv` dependency was dropped). Compose reads `.env` and passes the settings in.
+
+### Bug Fixes
+
+- An empty or non-numeric `THREAD_TTL_HOURS` no longer leaves the archive looking healthy while every update fails. Settings are now checked once at startup: an empty one uses its default, and a value the app can't use (not a whole number, below 1, or a `BACKFILL_DATE` that isn't `YYYY-MM-DD`) stops it with one line in the logs naming the setting, instead of a traceback or a silent failure.
+- `SCHEDULER_INTERVAL_MINUTES=0` stops the app at startup instead of polling Reddit every second.
+- An unknown `TZ` logs a warning and uses UTC, instead of stopping the app with a traceback, and an empty `TZ` uses UTC instead of breaking pages that show dates.
+- An empty `FORWARDED_ALLOW_IPS` uses the default, `127.0.0.1,::1`, instead of trusting no proxy.
+
 ## [v0.4.2](https://github.com/wazam/r-fantasybaseball-indexer/releases/tag/v0.4.2) (2026-11-11)
 
 ### What's New
@@ -63,7 +78,7 @@ Release notes for every version, newest first. Each version is tagged in git and
 - Saved Searches: save frequent search queries from a dropdown on the search bar, and rerun them with one tap, synced across every browser and device.
 - Relative Dates, Hide Flairs, and Auto-collapse Threshold are also synced across every browser and device now, alongside the lists above.
 - Auto/Light/Dark theme, following your device automatically when set to Auto.
-- Added a container health check endpoint, surfacing healthy/unhealthy status in docker ps and tools like Portainer.
+- Added a container health check endpoint, surfacing healthy/unhealthy status in docker ps.
 - Consistent structured logging across the app and scheduler.
 
 ### Bug Fixes
