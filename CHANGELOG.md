@@ -24,6 +24,8 @@ Release notes for every version, newest first. Each version is tagged in git and
 - A very large `THREAD_TTL_HOURS` or `SCHEDULER_INTERVAL_MINUTES` stops the app at startup with a line naming the setting. Before, it stopped with a traceback, made every update fail, or, with `BACKFILL_DATE` set, stopped updates after the backfill without a message.
 - A `TZ` with spaces around it, or only spaces, no longer stops the app with a traceback. The spaces are ignored, and a blank `TZ` uses UTC.
 - A `FORWARDED_ALLOW_IPS` entry that isn't an IP address or range (such as `localhost` or `10.0.0.5/24`), or `*` next to other entries, stops the app at startup with a line naming the entry. Before, uvicorn ignored it without a message, so the proxy wasn't trusted.
+- A `FORWARDED_ALLOW_IPS` of `*` with spaces around it trusts every address, as `*` does. Before, it passed the startup check, but uvicorn trusted no proxy, so the access log showed the proxy's address and redirects lost `https://`. Spaces and tabs in the value are now removed.
+- When the container can't write to `./data`, the startup error now names the reason (such as `Permission denied` or `Read-only file system`) and appears as an `ERROR` line in the logs after the settings check. The `docker exec` tools that write to the archive give the same error, where they used to fail with SQLite's own.
 
 ## [v0.4.2](https://github.com/wazam/r-fantasybaseball-indexer/releases/tag/v0.4.2) (2026-11-11)
 

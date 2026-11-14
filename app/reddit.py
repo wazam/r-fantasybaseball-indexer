@@ -4,7 +4,7 @@ import logging
 import time
 
 from app.config import check_settings, get_reddit_client, get_active_hours
-from app.db import SessionLocal
+from app.db import SessionLocal, check_data_folder
 from app.models import Thread, Comment
 
 logger = logging.getLogger(__name__)
@@ -148,6 +148,7 @@ def _reply_counts(all_comments):
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-8s %(name)s %(message)s")
     check_settings()
+    check_data_folder()
     logger.info("Standalone thread fetcher using hardcoded URL.")
 
     valid_url = "https://www.reddit.com/r/fantasybaseball/comments/1s6t89c/daily_anything_goes_thread_march_29_2026/"

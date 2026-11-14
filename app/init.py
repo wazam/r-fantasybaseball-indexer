@@ -1,12 +1,13 @@
 import logging
 
-from app.db import init_db
+from app.db import check_data_folder, init_db
 
 logger = logging.getLogger(__name__)
 
 # Run with: docker exec anything-goes-archive ./.venv/bin/python -m app.init
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-8s %(name)s %(message)s")
+    check_data_folder()
     logger.info("Initializing database.")
     try:
         init_db()

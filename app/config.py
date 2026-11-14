@@ -109,7 +109,10 @@ def get_time_zone():
 
 
 def get_forwarded_allow_ips():
-    """uvicorn reads FORWARDED_ALLOW_IPS itself and quietly trusts no proxy for an entry it can't parse."""
+    """uvicorn reads FORWARDED_ALLOW_IPS itself and quietly trusts no proxy for an entry it can't parse.
+
+    entrypoint.sh removes every space and tab first, as this check ignores them, so both see the same value.
+    """
     value = _setting("FORWARDED_ALLOW_IPS")
     if value is None or value == "*":
         return value

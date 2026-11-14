@@ -9,7 +9,7 @@ from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
 from app.config import check_settings, get_backfill_cutoff, get_refresh_minutes
-from app.db import init_db
+from app.db import check_data_folder, init_db
 from app.threads.backfill import backfill_missing_threads, fetch_missing_threads
 from app.threads.deleted_authors import relabel_deleted_authors_once
 from app.threads.fetch_active import deactivate_old_threads, fetch_active_threads, fetch_new_threads
@@ -18,8 +18,10 @@ from app.web.routes import router, static_version
 
 logger = logging.getLogger(__name__)
 
-# Runs when uvicorn imports this module: a bad setting stops the app before anything starts
+# Runs when uvicorn imports this module: a bad setting or an unwritable data folder stops the app before anything
+# starts
 check_settings()
+check_data_folder()
 
 
 def run_backfill(cutoff: float):

@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, UTC
 import logging
 
 from app.config import check_settings, get_active_hours
-from app.db import SessionLocal
+from app.db import SessionLocal, check_data_folder
 from app.models import Thread
 from app.reddit import fetch_and_store_thread
 from app.threads.search import get_thread_urls
@@ -75,6 +75,7 @@ def fetch_new_threads():
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-8s %(name)s %(message)s")
     check_settings()
+    check_data_folder()
 
     # logger.info("Manually overriding all threads as active.")
     # activate_all_threads()
