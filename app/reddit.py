@@ -3,7 +3,7 @@ from prawcore.exceptions import TooManyRequests
 import logging
 import time
 
-from app.config import check_settings, get_reddit_client, get_active_hours
+from app.config import ACTIVE_HOURS, check_settings, get_reddit_client
 from app.db import SessionLocal, check_data_folder
 from app.models import Thread, Comment
 
@@ -63,7 +63,7 @@ def _store_thread(session, submission, submission_url: str, comment_count: int):
     logger.info(f"Storing thread: {submission.title}")
 
     posted_at = datetime.fromtimestamp(submission.created_utc, UTC)
-    is_active = datetime.now(UTC) - posted_at < timedelta(hours=get_active_hours())
+    is_active = datetime.now(UTC) - posted_at < timedelta(hours=ACTIVE_HOURS)
 
     if existing:
         existing.score = submission.score

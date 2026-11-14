@@ -8,7 +8,7 @@ from fastapi.exceptions import HTTPException
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
-from app.config import check_settings, get_refresh_minutes
+from app.config import REFRESH_MINUTES, check_settings
 from app.db import check_data_folder, init_db
 from app.threads.deleted_authors import relabel_deleted_authors_once
 from app.threads.fetch_active import deactivate_old_threads, fetch_active_threads, fetch_new_threads
@@ -42,9 +42,9 @@ async def lifespan(app: FastAPI):
     scheduler = BackgroundScheduler()
 
     # The first update runs now and, after downtime, fills the gap since the newest stored thread
-    scheduler.add_job(update_threads, "interval", minutes=get_refresh_minutes(), next_run_time=datetime.now())
+    scheduler.add_job(update_threads, "interval", minutes=REFRESH_MINUTES, next_run_time=datetime.now())
     scheduler.start()
-    logger.info(f"Updates will run every {get_refresh_minutes()} minute(s).")
+    logger.info(f"Updates will run every {REFRESH_MINUTES} minutes.")
 
     yield
 

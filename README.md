@@ -34,7 +34,7 @@
 - **Saved Comments & Saved Searches**: bookmark comments and save frequent search queries for one-tap access later
 - **Theming & Display Preferences**: light, dark, or auto theme, adjustable text size, and a full-width layout option
 - **Installable Web App**: add to your phone's home screen for an app-like experience
-- **Scheduler**: automatically fetches newly posted threads, refreshes active ones, and marks old threads inactive on a configurable interval
+- **Scheduler**: every 15 minutes, fetches newly posted threads, refreshes each thread for 36 hours after it's posted, then marks it inactive
 - **Comment Archiving**: stores full comment trees with upvote scores, league flairs, reply counts, and parent/child relationships for full thread reconstruction
 - **Duplicate Prevention**: tracks Reddit submission and comment IDs to avoid storing duplicates
 - **Change Tracking**: updates edited comment bodies and upvote scores on each refresh; preserves deleted and removed comments in the archive
@@ -83,8 +83,6 @@ services:
       - REDDIT_CLIENT_ID=${REDDIT_CLIENT_ID}  # required
       - REDDIT_CLIENT_SECRET=${REDDIT_CLIENT_SECRET}  # required
       - REDDIT_USER_AGENT=${REDDIT_USER_AGENT:-}  # optional
-      - THREAD_TTL_HOURS=${THREAD_TTL_HOURS:-24}  # optional
-      - SCHEDULER_INTERVAL_MINUTES=${SCHEDULER_INTERVAL_MINUTES:-60}  # optional
       - TZ=${TZ:-UTC}  # optional
       - FORWARDED_ALLOW_IPS=${FORWARDED_ALLOW_IPS:-127.0.0.1,::1}  # optional
     volumes:
@@ -159,15 +157,13 @@ The container runs as user `1000:1000` and can only write to `./data` if that us
 
 ## Environment Variables
 
-Set these in a `.env` file next to `compose.yaml`, one `NAME=value` per line. `compose.yaml` passes each one you set to the container, and any you leave unset or empty keep the defaults below. A value the app can't use, such as a number out of range, a malformed date or credentials Reddit rejects, stops it at startup with the reason in `docker compose logs`.
+Set these in a `.env` file next to `compose.yaml`, one `NAME=value` per line. `compose.yaml` passes each one you set to the container, and any you leave unset or empty keep the defaults below. A value the app can't use, such as credentials Reddit rejects or a `FORWARDED_ALLOW_IPS` entry that isn't an IP address, stops it at startup with the reason in `docker compose logs`.
 
 | Variable | Description | Required | Default |
 | --- | --- | --- | --- |
 | `REDDIT_CLIENT_ID` | Reddit app client ID, the string under the app name at [reddit.com/prefs/apps](https://www.reddit.com/prefs/apps) (see [Set Up Reddit API Access](#set-up-reddit-api-access)). | Yes | |
 | `REDDIT_CLIENT_SECRET` | Reddit app client secret, the "secret" field at [reddit.com/prefs/apps](https://www.reddit.com/prefs/apps). | Yes | |
 | `REDDIT_USER_AGENT` | User agent sent to Reddit's API. Reddit asks each app to identify itself with its own username, in the form `platform:app:version (by /u/your_username)`. Leave unset to use the built-in one, `linux:r-fantasybaseball-indexer:v<version> (by /u/wazam)`, which names this project's author. | No | |
-| `THREAD_TTL_HOURS` | Hours a thread stays active and continues to be refreshed before being archived. A whole number from 1 to 8760 (a year). | No | `24` |
-| `SCHEDULER_INTERVAL_MINUTES` | Minutes between scheduler runs, a whole number from 1 to 1440 (a day). Each thread with 1,000 to 3,000 comments takes roughly 2 to 3 minutes to fetch, so values below 15 are not practical. | No | `60` |
 | `TZ` | Time zone for the web UI's dates and the timestamps in the container's logs. Accepts a canonical [tz database name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List) such as `America/New_York`; legacy names such as `US/Eastern` and `EST5EDT` aren't in the image. An unknown one logs a warning and uses UTC. | No | `UTC` |
 | `FORWARDED_ALLOW_IPS` | Reverse proxy IPs to trust for `X-Forwarded-For` and `X-Forwarded-Proto` headers, comma-separated, with CIDR ranges allowed (`10.0.0.0/24`, not `10.0.0.5/24`). Behind a reverse proxy, set this to the proxy's address as the container sees it, so the access log shows real client IPs and redirects keep `https://`: the proxy container's address on a shared Docker network, or the network's gateway (from `docker network inspect`) when the proxy runs on the host. Use `*` only if nothing but the proxy can reach port 9009. A value that isn't `*` or a list of IP addresses and ranges stops the app at startup. | No | `127.0.0.1,::1` |
 

@@ -8,8 +8,6 @@ services:
       - REDDIT_CLIENT_ID=${REDDIT_CLIENT_ID}  # required
       - REDDIT_CLIENT_SECRET=${REDDIT_CLIENT_SECRET}  # required
       - REDDIT_USER_AGENT=${REDDIT_USER_AGENT:-}  # optional
-      - THREAD_TTL_HOURS=${THREAD_TTL_HOURS:-24}  # optional
-      - SCHEDULER_INTERVAL_MINUTES=${SCHEDULER_INTERVAL_MINUTES:-60}  # optional
       - TZ=${TZ:-UTC}  # optional
       - FORWARDED_ALLOW_IPS=${FORWARDED_ALLOW_IPS:-127.0.0.1,::1}  # optional
     volumes:

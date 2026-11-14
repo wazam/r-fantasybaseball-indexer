@@ -13,11 +13,11 @@ from app import __version__, __author__
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_CUTOFF_HOURS = 24
-DEFAULT_REFRESH_MINUTES = 60
-# A year and a day, far below the values whose date arithmetic overflows and stops updates
-MAX_CUTOFF_HOURS = 8760
-MAX_REFRESH_MINUTES = 1440
+# How long a thread keeps being refreshed after it's posted. A daily or nightly thread is replaced within a day,
+# and its comments slow down soon after
+ACTIVE_HOURS = 36
+# Minutes between updates. A busy thread takes 2 to 3 minutes to fetch, and up to three are active at once
+REFRESH_MINUTES = 15
 REQUIRED_VARS = ("REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET")
 
 
@@ -28,19 +28,6 @@ class SettingError(ValueError):
 def _setting(name):
     """The variable's value, or None when it's unset or empty, so an empty value gets the default."""
     return os.getenv(name, "").strip() or None
-
-
-def _whole_number(name, default, maximum, minimum=1):
-    value = _setting(name)
-    if value is None:
-        return default
-    try:
-        number = int(value)
-    except ValueError:
-        raise SettingError(f"{name} must be a whole number, got '{value}'.") from None
-    if not minimum <= number <= maximum:
-        raise SettingError(f"{name} must be from {minimum} to {maximum}, got {number}.")
-    return number
 
 
 def get_reddit_credentials():
@@ -64,16 +51,6 @@ def get_reddit_client():
         client_secret=client_secret,
         user_agent=_setting("REDDIT_USER_AGENT") or default_user_agent,
     )
-
-
-@cache
-def get_active_hours():
-    return _whole_number("THREAD_TTL_HOURS", DEFAULT_CUTOFF_HOURS, MAX_CUTOFF_HOURS)
-
-
-@cache
-def get_refresh_minutes():
-    return _whole_number("SCHEDULER_INTERVAL_MINUTES", DEFAULT_REFRESH_MINUTES, MAX_REFRESH_MINUTES)
 
 
 @cache
@@ -139,8 +116,6 @@ def check_settings():
     reads = (
         get_time_zone,
         get_reddit_credentials,
-        get_active_hours,
-        get_refresh_minutes,
         get_forwarded_allow_ips,
     )
     for read in reads:

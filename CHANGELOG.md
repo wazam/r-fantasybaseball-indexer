@@ -7,23 +7,21 @@ Release notes for every version, newest first. Each version is tagged in git and
 ### Upgrading
 
 - `BACKFILL_DATE` is removed, since the app now fills gaps itself (below). The app ignores it, so taking it out of `.env` or your stack's variables is only tidying; the new `compose.yaml` no longer passes it. To import threads from before the archive's newest one, run `docker exec anything-goes-archive ./.venv/bin/python -m app.threads.backfill YYYY-MM-DD` once.
-- `THREAD_TTL_HOURS` now accepts 1 to 8760 and `SCHEDULER_INTERVAL_MINUTES` 1 to 1440. If you set either above that, lower it, or the app stops at startup with a line in the logs naming the setting.
+- `THREAD_TTL_HOURS` and `SCHEDULER_INTERVAL_MINUTES` are removed. Each thread is now refreshed for 36 hours after it's posted (the default was 24), and updates run every 15 minutes (the default was 60). The app ignores both if they're still set, so taking them out of `.env` or your stack's variables is only tidying; the new `compose.yaml` no longer passes them.
 
 ### What's New
 
-- Threads missed while the app was stopped are imported by the first update after it starts: each update looks back to the newest stored thread, or a week if that's more recent, and fetches any thread it's missing, oldest first. Before, an update only picked up threads from their first `THREAD_TTL_HOURS`, so anything posted during downtime needed `BACKFILL_DATE` or the backfill tool. A thread that fails to fetch is also retried for a week, and the search for new threads stops at the cutoff instead of paging through all 250 results Reddit's search returns on every update.
+- Threads missed while the app was stopped are imported by the first update after it starts: each update looks back to the newest stored thread, or a week if that's more recent, and fetches any thread it's missing, oldest first. Before, an update only picked up threads from their first 24 hours, so anything posted during downtime needed `BACKFILL_DATE` or the backfill tool. A thread that fails to fetch is also retried for a week, and the search for new threads stops at the cutoff instead of paging through all 250 results Reddit's search returns on every update.
 - `compose.yaml` is simpler: it no longer includes the hardening block, and each setting is marked `# optional` or `# required`. An existing `compose.yaml` keeps working. Without `REDDIT_CLIENT_ID` and `REDDIT_CLIENT_SECRET`, the app now exits at startup with an error in `docker compose logs`, where Compose used to refuse to start.
 - `.env.example` is gone. The README's Environment Variables table describes every setting and its default, and `compose.yaml` marks each one `# optional` or `# required`. Put the ones you set in `.env` next to `compose.yaml`, one `NAME=value` per line.
 - The app runs only in Docker: the README's Manual Install (Python) section is gone, and the app no longer reads `.env` itself (the `python-dotenv` dependency was dropped). Compose reads `.env` and passes the settings in.
 
 ### Bug Fixes
 
-- An empty or non-numeric `THREAD_TTL_HOURS` no longer leaves the archive looking healthy while every update fails. Settings are now checked once at startup: an empty one uses its default, and a value the app can't use (not a whole number, or out of range) stops it with one line in the logs naming the setting, instead of a traceback or a silent failure.
-- `SCHEDULER_INTERVAL_MINUTES=0` stops the app at startup instead of polling Reddit every second.
+- Settings are now checked once at startup: an empty one uses its default, and a value the app can't use stops it with one line in the logs naming the setting, instead of a traceback or a silent failure. Before, an empty or non-numeric `THREAD_TTL_HOURS` left the archive looking healthy while every update failed, and `SCHEDULER_INTERVAL_MINUTES=0` polled Reddit every second; both settings are now removed (see Upgrading).
 - An unknown `TZ` logs a warning and uses UTC, instead of stopping the app with a traceback, and an empty `TZ` uses UTC instead of breaking pages that show dates.
 - An empty `FORWARDED_ALLOW_IPS` uses the default, `127.0.0.1,::1`, instead of trusting no proxy.
 - Credentials Reddit rejects stop the app at startup with a line in the logs, instead of leaving it looking healthy while every update fails. If Reddit can't be reached, it logs a warning and starts.
-- A very large `THREAD_TTL_HOURS` or `SCHEDULER_INTERVAL_MINUTES` stops the app at startup with a line naming the setting. Before, it stopped with a traceback or made every update fail.
 - A `TZ` with spaces around it, or only spaces, no longer stops the app with a traceback. The spaces are ignored, and a blank `TZ` uses UTC.
 - A `FORWARDED_ALLOW_IPS` entry that isn't an IP address or range (such as `localhost` or `10.0.0.5/24`), or `*` next to other entries, stops the app at startup with a line naming the entry. Before, uvicorn ignored it without a message, so the proxy wasn't trusted.
 - A `FORWARDED_ALLOW_IPS` of `*` with spaces around it trusts every address, as `*` does. Before, it passed the startup check, but uvicorn trusted no proxy, so the access log showed the proxy's address and redirects lost `https://`. Spaces and tabs in the value are now removed.

@@ -3,7 +3,7 @@ import logging
 
 from sqlalchemy import func
 
-from app.config import check_settings, get_active_hours
+from app.config import ACTIVE_HOURS, check_settings
 from app.db import SessionLocal, check_data_folder
 from app.models import Thread
 from app.reddit import fetch_and_store_thread
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def deactivate_old_threads():
-    cutoff = datetime.now(UTC) - timedelta(hours=get_active_hours())
+    cutoff = datetime.now(UTC) - timedelta(hours=ACTIVE_HOURS)
 
     with SessionLocal() as session:
         updated = session.query(Thread).filter(
