@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, UTC
 import logging
 
-from app.config import get_active_hours
+from app.config import check_settings, get_active_hours
 from app.db import SessionLocal
 from app.models import Thread
 from app.reddit import fetch_and_store_thread
@@ -74,6 +74,7 @@ def fetch_new_threads():
 # Run with: docker exec anything-goes-archive ./.venv/bin/python -m app.threads.fetch_active
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-8s %(name)s %(message)s")
+    check_settings()
 
     # logger.info("Manually overriding all threads as active.")
     # activate_all_threads()

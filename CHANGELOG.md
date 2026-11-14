@@ -4,6 +4,10 @@ Release notes for every version, newest first. Each version is tagged in git and
 
 ## Unreleased
 
+### Upgrading
+
+- `THREAD_TTL_HOURS` now accepts 1 to 8760 and `SCHEDULER_INTERVAL_MINUTES` 1 to 1440. If you set either above that, lower it, or the app stops at startup with a line in the logs naming the setting.
+
 ### What's New
 
 - `compose.yaml` is simpler: it no longer includes the hardening block, and each setting is marked `# optional` or `# required`. An existing `compose.yaml` keeps working. Without `REDDIT_CLIENT_ID` and `REDDIT_CLIENT_SECRET`, the app now exits at startup with an error in `docker compose logs`, where Compose used to refuse to start.
@@ -16,6 +20,10 @@ Release notes for every version, newest first. Each version is tagged in git and
 - `SCHEDULER_INTERVAL_MINUTES=0` stops the app at startup instead of polling Reddit every second.
 - An unknown `TZ` logs a warning and uses UTC, instead of stopping the app with a traceback, and an empty `TZ` uses UTC instead of breaking pages that show dates.
 - An empty `FORWARDED_ALLOW_IPS` uses the default, `127.0.0.1,::1`, instead of trusting no proxy.
+- Credentials Reddit rejects stop the app at startup with a line in the logs, instead of leaving it looking healthy while every update fails. If Reddit can't be reached, it logs a warning and starts.
+- A very large `THREAD_TTL_HOURS` or `SCHEDULER_INTERVAL_MINUTES` stops the app at startup with a line naming the setting. Before, it stopped with a traceback, made every update fail, or, with `BACKFILL_DATE` set, stopped updates after the backfill without a message.
+- A `TZ` with spaces around it, or only spaces, no longer stops the app with a traceback. The spaces are ignored, and a blank `TZ` uses UTC.
+- A `FORWARDED_ALLOW_IPS` entry that isn't an IP address or range (such as `localhost` or `10.0.0.5/24`), or `*` next to other entries, stops the app at startup with a line naming the entry. Before, uvicorn ignored it without a message, so the proxy wasn't trusted.
 
 ## [v0.4.2](https://github.com/wazam/r-fantasybaseball-indexer/releases/tag/v0.4.2) (2026-11-11)
 

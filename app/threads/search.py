@@ -3,7 +3,7 @@ import logging
 
 from prawcore.exceptions import PrawcoreException
 
-from app.config import get_reddit_client, get_active_hours
+from app.config import check_settings, get_reddit_client, get_active_hours
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +55,7 @@ def get_thread_urls(only_active=True, cutoff_date=None):
 # Run with: docker exec anything-goes-archive ./.venv/bin/python -m app.threads.search
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-8s %(name)s %(message)s")
+    check_settings()
     logger.info("Fetching recent 'Anything Goes' thread URLs.")
     urls = get_thread_urls()
     logger.info(f"Found {len(urls)} active thread URL(s).")

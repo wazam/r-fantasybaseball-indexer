@@ -33,7 +33,7 @@ jobs:
     env:
       # Compose reads only these files, so compose.override.yaml never merges in
       COMPOSE_FILE: ${{ matrix.compose == 'hardened' && 'compose.yaml:.github/compose-hardened.yaml' || 'compose.yaml' }}
-      # The app exits without credentials; these only need to be present
+      # Fake: the app exits without credentials, and the step that blocks HTTPS keeps Reddit from seeing these
       REDDIT_CLIENT_ID: test
       REDDIT_CLIENT_SECRET: test
 
@@ -66,6 +66,11 @@ jobs:
       # The runner is uid 1001; the container runs as 1000 and must own the folder
       - name: Create data directory
         run: mkdir -p data && sudo chown 1000:1000 data
+
+      # The app stops at startup when Reddit rejects its credentials. With HTTPS refused, it logs that it
+      # couldn't reach Reddit and starts; the image is already local, so nothing else needs the network
+      - name: Block the container's HTTPS traffic
+        run: sudo iptables -I DOCKER-USER -p tcp --dport 443 -j REJECT --reject-with tcp-reset
 
       - name: Start stack and wait for healthcheck
         run: docker compose up -d --wait --wait-timeout 120

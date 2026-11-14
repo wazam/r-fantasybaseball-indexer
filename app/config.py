@@ -1,3 +1,4 @@
+import ipaddress
 import logging
 import os
 import sys
@@ -7,6 +8,7 @@ from functools import cache
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import praw
+import prawcore
 
 from app import __version__, __author__
 
@@ -14,6 +16,9 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_CUTOFF_HOURS = 24
 DEFAULT_REFRESH_MINUTES = 60
+# A year and a day, far below the values whose date arithmetic overflows and stops updates
+MAX_CUTOFF_HOURS = 8760
+MAX_REFRESH_MINUTES = 1440
 REQUIRED_VARS = ("REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET")
 
 
@@ -26,7 +31,7 @@ def _setting(name):
     return os.getenv(name, "").strip() or None
 
 
-def _whole_number(name, default, minimum=1):
+def _whole_number(name, default, maximum, minimum=1):
     value = _setting(name)
     if value is None:
         return default
@@ -34,8 +39,8 @@ def _whole_number(name, default, minimum=1):
         number = int(value)
     except ValueError:
         raise SettingError(f"{name} must be a whole number, got '{value}'.") from None
-    if number < minimum:
-        raise SettingError(f"{name} must be at least {minimum}, got {number}.")
+    if not minimum <= number <= maximum:
+        raise SettingError(f"{name} must be from {minimum} to {maximum}, got {number}.")
     return number
 
 
@@ -64,12 +69,12 @@ def get_reddit_client():
 
 @cache
 def get_active_hours():
-    return _whole_number("THREAD_TTL_HOURS", DEFAULT_CUTOFF_HOURS)
+    return _whole_number("THREAD_TTL_HOURS", DEFAULT_CUTOFF_HOURS, MAX_CUTOFF_HOURS)
 
 
 @cache
 def get_refresh_minutes():
-    return _whole_number("SCHEDULER_INTERVAL_MINUTES", DEFAULT_REFRESH_MINUTES)
+    return _whole_number("SCHEDULER_INTERVAL_MINUTES", DEFAULT_REFRESH_MINUTES, MAX_REFRESH_MINUTES)
 
 
 @cache
@@ -88,24 +93,76 @@ def get_backfill_cutoff():
 def get_time_zone():
     """The zone for dates in the web UI. An unknown TZ only affects displayed times, so it falls back to UTC."""
     name = _setting("TZ")
-    if name is None:
-        return ZoneInfo("UTC")
+    unknown = False
     try:
-        return ZoneInfo(name)
+        zone = ZoneInfo(name or "UTC")
     except (ZoneInfoNotFoundError, ValueError):
-        logger.warning(f"TZ '{name}' isn't a known time zone. Using UTC.")
-        # APScheduler reads TZ itself and stops on an unknown zone, and the log timestamps should agree
-        os.environ["TZ"] = "UTC"
-        time.tzset()
-        return ZoneInfo("UTC")
+        unknown = True
+        zone = ZoneInfo("UTC")
+    # APScheduler and the log timestamps read TZ itself, unstripped, and APScheduler stops on a zone it can't
+    # read, so they get the zone the app uses
+    os.environ["TZ"] = zone.key
+    time.tzset()
+    if unknown:
+        logger.warning(f"TZ '{name}' isn't a known time zone name, such as America/New_York. Using UTC.")
+    return zone
+
+
+def get_forwarded_allow_ips():
+    """uvicorn reads FORWARDED_ALLOW_IPS itself and quietly trusts no proxy for an entry it can't parse."""
+    value = _setting("FORWARDED_ALLOW_IPS")
+    if value is None or value == "*":
+        return value
+    for entry in filter(None, (part.strip() for part in value.split(","))):
+        try:
+            # uvicorn's own parsing: a network with host bits set, such as 10.0.0.5/24, isn't one
+            ipaddress.ip_network(entry) if "/" in entry else ipaddress.ip_address(entry)
+        except ValueError:
+            which = "" if entry == value else f" ('{entry}' isn't one)"
+            raise SettingError(
+                f"FORWARDED_ALLOW_IPS must be * on its own, or IP addresses and networks separated by commas, "
+                f"got '{value}'{which}."
+            ) from None
+    return value
+
+
+def check_reddit_login():
+    """Ask Reddit for a token once, so wrong credentials stop the app instead of failing every update."""
+    try:
+        get_reddit_client().auth.scopes()
+    except (prawcore.exceptions.OAuthException, prawcore.exceptions.ResponseException) as e:
+        status = getattr(getattr(e, "response", None), "status_code", None)
+        if isinstance(e, prawcore.exceptions.OAuthException) or status == 401:
+            raise SettingError(
+                "Reddit rejected REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET. "
+                "Check both against the app at reddit.com/prefs/apps."
+            ) from None
+        logger.warning(f"Couldn't check the Reddit credentials ({e}). Starting anyway.")
+    except prawcore.exceptions.RequestException as e:
+        reason = type(e.original_exception).__name__
+        logger.warning(f"Couldn't reach Reddit to check the credentials ({reason}). Starting anyway.")
 
 
 def check_settings():
     """Read every setting once at startup, so a bad value stops the app here instead of failing later."""
     problems = []
-    for read in (get_reddit_credentials, get_active_hours, get_refresh_minutes, get_backfill_cutoff, get_time_zone):
+    reads = (
+        get_time_zone,
+        get_reddit_credentials,
+        get_active_hours,
+        get_refresh_minutes,
+        get_backfill_cutoff,
+        get_forwarded_allow_ips,
+    )
+    for read in reads:
         try:
             read()
+        except SettingError as e:
+            problems.append(str(e))
+    # Only with every other setting usable: the check calls Reddit
+    if not problems:
+        try:
+            check_reddit_login()
         except SettingError as e:
             problems.append(str(e))
     for problem in problems:
