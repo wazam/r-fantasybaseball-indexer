@@ -160,7 +160,7 @@ They copy the README and don't update on their own (GHCR's page does):
 
 - **Docker Hub:** at hub.docker.com, open the repository's General tab, update the short description (at most 100 characters, saying what the README's first sentence says), and replace the overview with the output of the command below, which builds it from `README.md` so the page can't drift from it. In order, with every link absolute, it has:
   - a first line `GitHub: https://github.com/wazam/r-fantasybaseball-indexer`, then the README's intro paragraph without its icon (Docker Hub shows the repository's avatar)
-  - `## Quick Start`: the pointer to Set Up Reddit API Access, the two registries, the `compose.yaml`, the `./data` owner paragraph, and the numbered steps, without Build from Source or Manual Install
+  - `## Quick Start`: a pointer to Set Up Reddit API Access, then the README's warning as a plain blockquote (Docker Hub doesn't render GitHub's alert boxes), then Run via Docker Compose: the two registries and the numbered steps, with the `compose.yaml` in step 2 pulling from Docker Hub and a note on switching the downloaded file, without the tip box or Build from Source
   - `## Features`, then `## Issues and Feature Requests` with the README's Contributing text: the issues sentence and the CHANGELOG, ROADMAP and RELEASING links
 
   Then check the public page, `https://hub.docker.com/r/wazam123/r-fantasybaseball-indexer`.
@@ -169,34 +169,33 @@ They copy the README and don't update on their own (GHCR's page does):
 # Run from the repo root.
 /usr/bin/python3 -I - <<'EOF'
 import re
+repo = 'r-fantasybaseball-indexer'
+base = f'https://github.com/wazam/{repo}'
+ghcr, hub = f'ghcr.io/wazam/{repo}:latest', f'wazam123/{repo}:latest'
 s = open('README.md').read()
 def sec(a, b):
     i = s.index(a); return s[i:s.index(b, i)].rstrip() + '\n'
 def swap(t, old, new):
     assert t.count(old) == 1, old
     return t.replace(old, new)
-base = 'https://github.com/wazam/r-fantasybaseball-indexer'
-ghcr, hub = 'ghcr.io/wazam/r-fantasybaseball-indexer:latest', 'wazam123/r-fantasybaseball-indexer:latest'
-intro = sec('![Anything Goes Archive]', '## Table of Contents').replace('![Anything Goes Archive](docs/icon.png) ', '')
-run = sec('The image is published to', '1. **Create the data directory**')
-run = swap(run, f'[Docker Hub](https://hub.docker.com/r/wazam123/r-fantasybaseball-indexer) (', 'Docker Hub (')
-run = swap(run, 'This is the `compose.yaml` to use:', 'This is the `compose.yaml` to use, pulling from Docker Hub:')
-run = swap(run, ghcr, hub)
-steps = sec('1. **Create the data directory**', '---\n\n### Build from Source')
-dl_end = '/main/compose.yaml\n   ```\n'
-steps = swap(steps, dl_end, dl_end + f'\n   The downloaded `compose.yaml` pulls from GHCR. To pull from Docker Hub instead, change its `image:` line to `{hub}`, as above.\n')
-steps = swap(steps, ' (see [Set Up Reddit API Access](#set-up-reddit-api-access))', '')
-steps = swap(steps, 'Without the two credentials, the app exits at startup with an error in `docker compose logs`.', f'Without the two credentials, the app exits at startup with an error in `docker compose logs`. Every setting is described in the README\'s [Environment Variables]({base}#environment-variables) table.')
-steps = swap(steps, '[http://localhost:9009](http://localhost:9009)', '`http://localhost:9009`')
-quick = '\n'.join([
-    '## Quick Start', '',
-    f'You need Reddit API credentials first; see [Set Up Reddit API Access]({base}#set-up-reddit-api-access).', '',
-    run, steps])
+def absolute(t):
+    t = re.sub(r'\]\((#[^)]+)\)', lambda m: f']({base}{m.group(1)})', t)
+    return re.sub(r'\]\((?!https?://)([^)]+)\)', lambda m: f']({base}/blob/main/{m.group(1)})', t)
+intro = re.sub(r'^<img [^>]*> ', '', sec('<img src=', '## Table of Contents'))
+quick = sec('## Quick Start\n', '### Build from Source')
+quick = swap(quick, '## Quick Start\n\n> [!TIP]\n> Run via Docker Compose is recommended for most users. No clone required.\n\n', '')
+quick = swap(quick, '### Run via Docker Compose\n\n', '')
+quick = swap(quick, '> [!WARNING]\n> ', '> **Warning:** ')  # Docker Hub doesn't render GitHub's alert boxes
+quick = swap(quick, f'[Docker Hub](https://hub.docker.com/r/wazam123/{repo}) (', 'Docker Hub (')
+quick = swap(quick, '`compose.yaml` uses GHCR.', f'The `compose.yaml` below pulls from Docker Hub. The one step 2 downloads pulls from GHCR; to use Docker Hub, change its `image:` line to `{hub}`.')
+quick = swap(quick, ghcr, hub)
+quick = 'You need Reddit API credentials first; see [Set Up Reddit API Access](#set-up-reddit-api-access).\n\n' + quick
 feat = sec('## Features', '## Tech Stack')
-issues = sec('## Contributing', '## Disclaimers').replace('## Contributing', '## Issues and Feature Requests')
-issues = re.sub(r'\]\((?!https?://)([^)]+)\)', lambda m: f']({base}/blob/main/{m.group(1)})', issues)
-print('\n'.join([f'GitHub: {base}', '', intro, quick, feat, issues]).rstrip())
+i = s.index('## Contributing')
+issues = swap(s[i:s.index('\n## ', i)].rstrip() + '\n', '## Contributing', '## Issues and Feature Requests')
+print('\n'.join([f'GitHub: {base}', '', intro, '## Quick Start', '', absolute(quick), absolute(feat), absolute(issues)]).rstrip())
 EOF
+
 ```
 
 An `AssertionError` or `ValueError` means the README changed shape where the command expects it; update the command to match before pasting anything.
