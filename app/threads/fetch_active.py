@@ -1,11 +1,13 @@
 from datetime import datetime, timedelta, UTC
 import logging
 
+from sqlalchemy import func
+
 from app.config import check_settings, get_active_hours
 from app.db import SessionLocal, check_data_folder
 from app.models import Thread
 from app.reddit import fetch_and_store_thread
-from app.threads.search import get_thread_urls
+from app.threads.search import LOOKBACK_DAYS, get_thread_urls
 
 logger = logging.getLogger(__name__)
 
@@ -54,21 +56,37 @@ def fetch_active_threads():
     logger.info(f"Updated {len(active_threads)} active thread(s).")
 
 
-def fetch_new_threads():
-    recent_urls = get_thread_urls()
-    added = 0
-
+def lookback_cutoff():
+    """Where the search for missing threads starts: the newest stored thread or LOOKBACK_DAYS ago, whichever is
+    earlier, so the first update after downtime fills the gap."""
+    lookback = datetime.now(UTC) - timedelta(days=LOOKBACK_DAYS)
     with SessionLocal() as session:
-        for url in recent_urls:
-            exists = session.query(Thread).filter_by(permalink=url).first()
-            if exists:
-                continue  # Skip silently to reduce log spam
+        newest = session.query(func.max(Thread.posted_at)).scalar()
+    if newest is not None:
+        # SQLite stores the UTC time without its zone
+        newest = newest.replace(tzinfo=UTC)
+        if newest < lookback:
+            logger.info(f"The newest stored thread is from {newest:%Y-%m-%d}. Looking for threads missed since then.")
+            return newest.timestamp()
+    return lookback.timestamp()
 
-            logger.info(f"Fetching newly posted thread: {url}")
-            fetch_and_store_thread(url)
-            added += 1
 
-    logger.info(f"Fetched {added} new thread(s).")
+def fetch_threads_since(cutoff: float):
+    """Fetch every thread posted since cutoff, a UTC timestamp, that isn't stored yet."""
+    with SessionLocal() as session:
+        missing = [url for url in get_thread_urls(cutoff) if not session.query(Thread).filter_by(permalink=url).first()]
+
+    # Oldest first: if the app stops partway, the newest stored thread marks where to carry on
+    missing.reverse()
+    for i, url in enumerate(missing, 1):
+        logger.info(f"Fetching missing thread {i}/{len(missing)}: {url}")
+        fetch_and_store_thread(url)
+
+    logger.info(f"Fetched {len(missing)} new thread(s).")
+
+
+def fetch_new_threads():
+    fetch_threads_since(lookback_cutoff())
 
 
 # Run with: docker exec anything-goes-archive ./.venv/bin/python -m app.threads.fetch_active

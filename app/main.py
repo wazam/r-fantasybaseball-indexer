@@ -8,9 +8,8 @@ from fastapi.exceptions import HTTPException
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
-from app.config import check_settings, get_backfill_cutoff, get_refresh_minutes
+from app.config import check_settings, get_refresh_minutes
 from app.db import check_data_folder, init_db
-from app.threads.backfill import backfill_missing_threads, fetch_missing_threads
 from app.threads.deleted_authors import relabel_deleted_authors_once
 from app.threads.fetch_active import deactivate_old_threads, fetch_active_threads, fetch_new_threads
 from app.threads.reply_counts import recount_replies_once
@@ -22,15 +21,6 @@ logger = logging.getLogger(__name__)
 # starts
 check_settings()
 check_data_folder()
-
-
-def run_backfill(cutoff: float):
-    missing = backfill_missing_threads(cutoff)
-    if missing:
-        logger.info(f"Fetching {len(missing)} missing thread(s)...")
-        fetch_missing_threads(missing)
-    else:
-        logger.info("No missing threads found. Backfill complete.")
 
 
 def update_threads():
@@ -51,22 +41,8 @@ async def lifespan(app: FastAPI):
 
     scheduler = BackgroundScheduler()
 
-    cutoff = get_backfill_cutoff()
-    if cutoff is not None:
-        logger.info("BACKFILL_DATE set. Backfill will run before the first scheduled update.")
-
-        def run_backfill_then_start_interval():
-            logger.info("Running backfill...")
-            run_backfill(cutoff)
-            logger.info("Backfill finished. Starting recurring updates.")
-            update_threads()
-            scheduler.add_job(update_threads, "interval", minutes=get_refresh_minutes())
-
-        scheduler.add_job(run_backfill_then_start_interval)
-    else:
-        logger.info("BACKFILL_DATE not set. Skipping backfill.")
-        scheduler.add_job(update_threads, "interval", minutes=get_refresh_minutes(), next_run_time=datetime.now())
-
+    # The first update runs now and, after downtime, fills the gap since the newest stored thread
+    scheduler.add_job(update_threads, "interval", minutes=get_refresh_minutes(), next_run_time=datetime.now())
     scheduler.start()
     logger.info(f"Updates will run every {get_refresh_minutes()} minute(s).")
 

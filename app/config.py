@@ -3,7 +3,6 @@ import logging
 import os
 import sys
 import time
-from datetime import datetime, timezone
 from functools import cache
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -78,18 +77,6 @@ def get_refresh_minutes():
 
 
 @cache
-def get_backfill_cutoff():
-    """The BACKFILL_DATE cutoff as a UTC timestamp, or None when it's unset."""
-    value = _setting("BACKFILL_DATE")
-    if value is None:
-        return None
-    try:
-        return datetime.strptime(value, "%Y-%m-%d").replace(tzinfo=timezone.utc).timestamp()
-    except ValueError:
-        raise SettingError(f"BACKFILL_DATE must be a YYYY-MM-DD date, got '{value}'.") from None
-
-
-@cache
 def get_time_zone():
     """The zone for dates in the web UI. An unknown TZ only affects displayed times, so it falls back to UTC."""
     name = _setting("TZ")
@@ -154,7 +141,6 @@ def check_settings():
         get_reddit_credentials,
         get_active_hours,
         get_refresh_minutes,
-        get_backfill_cutoff,
         get_forwarded_allow_ips,
     )
     for read in reads:
